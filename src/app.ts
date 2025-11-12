@@ -30,15 +30,10 @@ export class App {
     this.mediaService = new MediaService(this.cacheService);
 
     this.userService = new UserService(this.databaseService);
-    this.verificationContentService = new VerificationContentService();
+    this.verificationContentService = new VerificationContentService(this.configService);
     this.verificationSceneService = new VerificationSceneService(this.userService, this.verificationContentService, this.mediaService);
 
-    this.botService = new BotService(
-      this.configService,
-      this.databaseService,
-      this.verificationSceneService,
-      this.userService,
-    );
+    this.botService = new BotService(this.configService, this.databaseService, this.verificationSceneService, this.userService);
   }
 
   public async init() {
