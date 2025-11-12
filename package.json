@@ -1,0 +1,46 @@
+{
+  "name": "croakitty-bot",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "//--- РЕЖИМ РАЗРАБОТКИ ---//": "",
+    "dev": "ts-node-dev src/index.ts",
+    "//--- ПРОДАКШЕН СБОРКА И ЗАПУСК ---//": "",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "//--- КАЧЕСТВО КОДА: ЛИНТИНГ И ФОРМАТИРОВАНИЕ ---//": "",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
+    "format": "prettier --write \"./src/**/*.ts\"",
+    "format:check": "prettier --check \"./src/**/*.ts\"",
+    "//--- ПРОВЕРКИ ---//": "",
+    "type-check": "tsc --noEmit",
+    "validate": "npm run format:check && npm run lint && npm run type-check"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@telegraf/session": "^2.0.0-beta.7",
+    "better-sqlite3": "^12.4.1",
+    "dotenv": "^17.2.3",
+    "kysely": "^0.27.2",
+    "telegraf": "^4.16.3"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.39.0",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^24.9.1",
+    "@typescript-eslint/eslint-plugin": "^8.46.2",
+    "@typescript-eslint/parser": "^8.46.2",
+    "eslint": "^9.38.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import-helpers": "^2.0.1",
+    "eslint-plugin-prettier": "^5.5.4",
+    "prettier": "^3.6.2",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.9.3"
+  }
+}
