@@ -140,30 +140,37 @@ export class VerificationSceneService {
     const wasMedia = previousMessage && 'photo' in previousMessage;
     const hasMediaNow = !!stepData.image;
 
+    //Некоторые вопросы слишком длинные и не помещуются в кнопки, поэтому костылим вопросы в тексте сообщения
+    let fullStepDataText = stepData.text;
+    if (stepData?.options?.length) {
+      const questionsText = stepData.options.map((option, idx) => `${idx + 1}. ${option}`).join('\n');
+      fullStepDataText += `\n\n<blockquote>${questionsText}</blockquote>\n`;
+    }
+
     try {
       if (!previousMessage) {
         if (hasMediaNow) {
-          await this.mediaService.sendPhoto(ctx, stepData.image!, { caption: stepData.text, reply_markup: keyboard.reply_markup });
+          await this.mediaService.sendPhoto(ctx, stepData.image!, { caption: fullStepDataText, reply_markup: keyboard.reply_markup });
         } else {
-          await ctx.reply(stepData.text, { parse_mode: 'HTML', ...keyboard });
+          await ctx.reply(fullStepDataText, { parse_mode: 'HTML', ...keyboard });
         }
         return;
       }
 
       if (wasMedia === hasMediaNow) {
         if (hasMediaNow) {
-          await this.mediaService.editPhoto(ctx, stepData.image!, { caption: stepData.text, reply_markup: keyboard.reply_markup });
+          await this.mediaService.editPhoto(ctx, stepData.image!, { caption: fullStepDataText, reply_markup: keyboard.reply_markup });
         } else {
-          await ctx.editMessageText(stepData.text, { parse_mode: 'HTML', ...keyboard });
+          await ctx.editMessageText(fullStepDataText, { parse_mode: 'HTML', ...keyboard });
         }
         return;
       }
 
       await ctx.deleteMessage(previousMessage.message_id);
       if (hasMediaNow) {
-        await this.mediaService.sendPhoto(ctx, stepData.image!, { caption: stepData.text, reply_markup: keyboard.reply_markup });
+        await this.mediaService.sendPhoto(ctx, stepData.image!, { caption: fullStepDataText, reply_markup: keyboard.reply_markup });
       } else {
-        await ctx.reply(stepData.text, { parse_mode: 'HTML', ...keyboard });
+        await ctx.reply(fullStepDataText, { parse_mode: 'HTML', ...keyboard });
       }
     } catch (e) {
       console.error(`[Scene] Failed to show step ${currentStep} for user ${ctx.from?.id}.`, e);
@@ -180,7 +187,11 @@ export class VerificationSceneService {
     let buttonRows: InlineKeyboardButton[][];
 
     if (step.options) {
-      buttonRows = step.options.map((option, index) => [Markup.button.callback(option, String(index))]);
+      buttonRows = step.options.map((option, idx) => {
+        //const buttonText = `${idx + 1}. ${option.length >= 50 ? option.substring(0, 47)+'...' : option}`;
+        const buttonText = `${idx + 1}. ${option}`;
+        return [Markup.button.callback(buttonText, idx.toString())];
+      });
     } else if (step.buttonText) {
       buttonRows = [[Markup.button.callback(step.buttonText, 'next')]];
     } else {

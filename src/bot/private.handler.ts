@@ -17,9 +17,9 @@ export class PrivateHandler {
 
       const chatId = ctx.payload;
 
-      if (chatId && !isNaN(Number(chatId))) {
+      if (chatId && !isNaN(+chatId)) {
         const initialState = {
-          chatId: Number(chatId),
+          chatId: +chatId,
           userId: ctx.from.id,
           currentStep: 0,
           answers: [],
@@ -65,7 +65,9 @@ export class PrivateHandler {
     this.bot.on('callback_query', async (ctx) => {
       console.warn(`Caught an orphaned callback query for user ${ctx.from.id}`);
       try {
-        await ctx.reply('Ой, кажется, я перезагрузился и забыл, на чем мы остановились. 😵‍💫\nПожалуйста, напишите /restart, чтобы начать проверку заново.');
+        await ctx.reply(
+          'Ой, кажется, я перезагрузился и забыл, на чем мы остановились. 😵‍💫\nПожалуйста, напишите /restart, чтобы начать проверку заново.',
+        );
       } catch (e) {
         console.error('[Failsafe] Could not respond to an orphaned callback query.', e);
       }
