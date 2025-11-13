@@ -1,13 +1,20 @@
+import path from 'node:path';
 import { type InlineKeyboardMarkup } from 'telegraf/typings/core/types/typegram';
+
+import { type IConfigService } from '../config/config.interface';
 
 import { type CacheService } from '../cache/cache.service';
 import { type MyContext } from '../types/context.interface';
 
 export class MediaService {
-  constructor(private readonly cacheService: CacheService) {}
+  constructor(
+    private readonly cacheService: CacheService,
+    private readonly configService: IConfigService,
+  ) {}
 
   public async sendPhoto(ctx: MyContext, imagePath: string, options: { caption: string; reply_markup: InlineKeyboardMarkup }): Promise<void> {
-    const fileId = this.cacheService.getFileId(imagePath) as string | undefined;
+    const imageFullPath = path.join(process.cwd(), this.configService.get('MEDIA_PATH', './media'), imagePath);
+    const fileId = this.cacheService.getFileId(imageFullPath) as string | undefined;
 
     if (fileId) {
       // Если file_id есть, используем его (он имеет тип string)
@@ -19,7 +26,7 @@ export class MediaService {
     } else {
       // Если file_id нет, используем объект { source: ... }
       const sentMessage = await ctx.replyWithPhoto(
-        { source: imagePath },
+        { source: imageFullPath },
         {
           caption: options.caption,
           parse_mode: 'HTML',
@@ -31,21 +38,22 @@ export class MediaService {
       if (sentMessage.photo) {
         const newFileId = sentMessage.photo.pop()?.file_id;
         if (newFileId) {
-          this.cacheService.setFileId(imagePath, newFileId);
-          console.log(`[Cache] Cached new file_id for ${imagePath}`);
+          this.cacheService.setFileId(imageFullPath, newFileId);
+          console.log(`[Cache] Cached new file_id for ${imageFullPath}`);
         }
       }
     }
   }
 
   public async editPhoto(ctx: MyContext, imagePath: string, options: { caption: string; reply_markup: InlineKeyboardMarkup }): Promise<void> {
-    const fileId = this.cacheService.getFileId(imagePath) as string | undefined;
+    const imageFullPath = path.join(process.cwd(), this.configService.get('MEDIA_PATH', './media'), imagePath);
+    const fileId = this.cacheService.getFileId(imageFullPath) as string | undefined;
 
     if (!fileId || !ctx.callbackQuery?.message) {
       if (ctx.callbackQuery?.message) {
         await ctx.deleteMessage(ctx.callbackQuery.message.message_id);
       }
-      await this.sendPhoto(ctx, imagePath, options);
+      await this.sendPhoto(ctx, imageFullPath, options);
       return;
     }
 

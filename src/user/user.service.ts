@@ -1,3 +1,5 @@
+import { type IConfigService } from '../config/config.interface';
+
 import { type DatabaseService, type UserRecord } from '../database/database.service';
 
 /**
@@ -12,13 +14,13 @@ export enum VerificationStatus {
 }
 
 export class UserService {
-  private readonly MAX_ATTEMPTS = 3;
+  private readonly MAX_ATTEMPTS: number;
 
-  constructor(private readonly dbService: DatabaseService) {}
-
-  public findUser(id: number): UserRecord {
-    const existingUser = this.dbService.findUser(id);
-    return <UserRecord>existingUser;
+  constructor(
+    private readonly dbService: DatabaseService,
+    private readonly configService: IConfigService,
+  ) {
+    this.MAX_ATTEMPTS = +this.configService.get('MAX_ATTEMPTS', '3');
   }
 
   public handleNewMemberJoined(userId: number, chatId: number): void {

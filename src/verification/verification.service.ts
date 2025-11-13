@@ -10,7 +10,7 @@ export class VerificationContentService implements IVerificationContentService {
   private readonly serviceSteps!: Record<string, ISceneStep>;
 
   constructor(private readonly configService: IConfigService) {
-    const contentPath = this.configService.get('VALIDATION_DATA', 'data/steps.json');
+    const contentPath = this.configService.get('CONTENT_PATH', 'data/steps.json');
     const absolutePath = path.join(process.cwd(), contentPath);
 
     try {

@@ -24,12 +24,12 @@ export class App {
   constructor() {
     this.configService = new ConfigService();
 
-    const dbPath = this.configService.get('DATABASE_URL');
+    const dbPath = this.configService.get('DB_PATH');
     this.databaseService = new DatabaseService(dbPath);
     this.cacheService = new CacheService(this.databaseService);
-    this.mediaService = new MediaService(this.cacheService);
+    this.mediaService = new MediaService(this.cacheService, this.configService);
 
-    this.userService = new UserService(this.databaseService);
+    this.userService = new UserService(this.databaseService, this.configService);
     this.verificationContentService = new VerificationContentService(this.configService);
     this.verificationSceneService = new VerificationSceneService(this.userService, this.verificationContentService, this.mediaService);
 
