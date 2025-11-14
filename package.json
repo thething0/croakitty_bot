@@ -4,17 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "//--- РЕЖИМ РАЗРАБОТКИ ---//": "",
     "dev": "ts-node-dev src/index.ts",
-    "//--- ПРОДАКШЕН СБОРКА И ЗАПУСК ---//": "",
     "build": "tsc",
     "start": "node dist/index.js",
-    "//--- КАЧЕСТВО КОДА: ЛИНТИНГ И ФОРМАТИРОВАНИЕ ---//": "",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "format": "prettier --write \"./src/**/*.ts\"",
     "format:check": "prettier --check \"./src/**/*.ts\"",
-    "//--- ПРОВЕРКИ ---//": "",
     "type-check": "tsc --noEmit",
     "validate": "npm run format:check && npm run lint && npm run type-check"
   },
