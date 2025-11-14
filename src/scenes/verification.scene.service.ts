@@ -255,29 +255,49 @@ export class VerificationSceneService {
       }
     } else {
       const attempts = this.userService.recordQuizAttempt(userId, chatId);
+      const maxAttempts = +this.configService.get('MAX_ATTEMPTS', '3'); // Получаем из конфига
       if (attempts !== false) {
-        const failStep = this.contentService.getServiceStep('fail');
-        const maxAttempts = +this.configService.get('MAX_ATTEMPTS', '3'); // Получаем из конфига
         const remainingAttempts = maxAttempts - attempts;
+        if (remainingAttempts > 0) {
+          const failStep = this.contentService.getServiceStep('fail');
+          //Вместо команды /restart
+          const keyboard =
+            remainingAttempts > 0
+              ? Markup.inlineKeyboard([Markup.button.callback('Попробовать снова', `restart_verification:${chatId}`)])
+              : undefined;
 
-        //Вместо команды /restart
-        const keyboard =
-          remainingAttempts > 0 ? Markup.inlineKeyboard([Markup.button.callback('Попробовать снова', `restart_verification:${chatId}`)]) : undefined;
+          let text = failStep.text.replace('{count}', remainingAttempts.toString());
+          text = text.replace('{try_noun}', this.getTryNoun(remainingAttempts));
 
-        let text = failStep.text.replace('{count}', remainingAttempts.toString());
-        text = text.replace('{try_noun}', this.getTryNoun(remainingAttempts));
-        //
-        try {
-          if (failStep.image) {
-            await this.mediaService.sendPhoto(ctx, failStep.image, {
-              caption: text,
-              reply_markup: keyboard?.reply_markup ?? { inline_keyboard: [] },
-            });
-          } else {
-            await ctx.reply(text, keyboard);
+          try {
+            if (failStep.image) {
+              await this.mediaService.sendPhoto(ctx, failStep.image, {
+                caption: text,
+                reply_markup: keyboard?.reply_markup ?? { inline_keyboard: [] },
+              });
+            } else {
+              await ctx.reply(text, keyboard);
+            }
+          } catch (e) {
+            console.error(`[Scene] Failed to show failure message to user ${userId}.`, e);
           }
-        } catch (e) {
-          console.error(`[Scene] Failed to show failure message to user ${userId}.`, e);
+        } else {
+          const tryLaterStep = this.contentService.getServiceStep('tryLater');
+          const intervalHours = +this.configService.get('RESET_INTERVAL_H', '168');
+          const intervalText = this.getIntervalText(intervalHours);
+          const text = tryLaterStep.text.replace('{interval}', intervalText);
+          try {
+            if (tryLaterStep.image) {
+              await this.mediaService.sendPhoto(ctx, tryLaterStep.image, {
+                caption: text,
+                reply_markup: { inline_keyboard: [] },
+              });
+            } else {
+              await ctx.reply(text);
+            }
+          } catch (e) {
+            console.error(`[Scene] Failed to show failure message to user ${userId}.`, e);
+          }
         }
       }
     }
