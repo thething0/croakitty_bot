@@ -38,8 +38,11 @@ export class VerificationSceneService {
 
         case VerificationStatus.LIMIT_REACHED:
           const tryLaterStep = this.contentService.getServiceStep('tryLater');
-          //TODO: доделать конфиг интервала в env
-          const text = tryLaterStep.text.replace('{interval}', 'неделю');
+
+          const intervalHours = +this.configService.get('RESET_INTERVAL_H', '168');
+          const intervalText = this.getIntervalText(intervalHours);
+          const text = tryLaterStep.text.replace('{interval}', intervalText);
+
           if (tryLaterStep.image) {
             await this.mediaService.sendPhoto(ctx, tryLaterStep.image, {
               caption: text,
@@ -259,9 +262,7 @@ export class VerificationSceneService {
 
         //Вместо команды /restart
         const keyboard =
-          remainingAttempts > 0
-            ? Markup.inlineKeyboard([Markup.button.callback('Попробовать снова', `restart_verification:${chatId}`)])
-            : undefined;
+          remainingAttempts > 0 ? Markup.inlineKeyboard([Markup.button.callback('Попробовать снова', `restart_verification:${chatId}`)]) : undefined;
 
         let text = failStep.text.replace('{count}', remainingAttempts.toString());
         text = text.replace('{try_noun}', this.getTryNoun(remainingAttempts));
@@ -289,5 +290,13 @@ export class VerificationSceneService {
     if (count === 1) return 'попытка';
     if ([2, 3, 4].includes(count)) return 'попытки';
     return 'попыток';
+  }
+
+  private getIntervalText(hours: number): string {
+    const days = Math.round(hours / 24);
+    if (days === 1) return '1 день';
+    if (days > 1 && days < 5) return `${days} дня`;
+    if (days >= 5) return `${days} дней`;
+    return `${hours} часов`;
   }
 }
