@@ -31,7 +31,12 @@ export class App {
 
     this.userService = new UserService(this.databaseService, this.configService);
     this.verificationContentService = new VerificationContentService(this.configService);
-    this.verificationSceneService = new VerificationSceneService(this.userService, this.verificationContentService, this.mediaService);
+    this.verificationSceneService = new VerificationSceneService(
+      this.configService,
+      this.userService,
+      this.verificationContentService,
+      this.mediaService,
+    );
 
     this.botService = new BotService(this.configService, this.databaseService, this.verificationSceneService, this.userService);
   }

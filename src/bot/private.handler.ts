@@ -61,6 +61,28 @@ export class PrivateHandler {
       );
     });
 
+    this.bot.action(/restart_verification:(-?\d+)/, async (ctx) => {
+      const chatId = +(ctx.match[1]);
+      if (isNaN(chatId)) {
+        await ctx.answerCbQuery('Ошибка: не удалось определить чат.', { show_alert: true });
+        return;
+      }
+
+      /*try {
+       /!* await ctx.answerCbQuery('Перезапускаю...');
+        await ctx.deleteMessage();*!/
+      } catch (e) {
+        console.warn(`[Action] Could not delete message for user ${ctx.from.id}`, e);
+      }*/
+      ///await ctx.scene.leave()
+      return ctx.scene.enter('verification', {
+        chatId: chatId,
+        userId: ctx.from.id,
+        currentStep: 0,
+        answers: [],
+      });
+    });
+
     // фикс обработки вне сцены
     this.bot.on('callback_query', async (ctx) => {
       console.warn(`Caught an orphaned callback query for user ${ctx.from.id}`);

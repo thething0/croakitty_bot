@@ -1,6 +1,8 @@
 import { Markup, Scenes } from 'telegraf';
 import { type InlineKeyboardButton, type InlineKeyboardMarkup } from 'telegraf/typings/core/types/typegram';
 
+import { type IConfigService } from '../config/config.interface';
+
 import { BotService } from '../bot/bot.service';
 import { type MediaService } from '../bot/media.service';
 
@@ -10,6 +12,7 @@ import { type ISceneStep, type IVerificationContentService } from '../verificati
 
 export class VerificationSceneService {
   constructor(
+    private readonly configService: IConfigService,
     private readonly userService: UserService,
     private readonly contentService: IVerificationContentService,
     private readonly mediaService: MediaService,
@@ -251,22 +254,26 @@ export class VerificationSceneService {
       const attempts = this.userService.recordQuizAttempt(userId, chatId);
       if (attempts !== false) {
         const failStep = this.contentService.getServiceStep('fail');
-        const MAX_ATTEMPTS = 3; //TODO: вынести в env
-        const remainingAttempts = MAX_ATTEMPTS - attempts;
+        const maxAttempts = +this.configService.get('MAX_ATTEMPTS', '3'); // Получаем из конфига
+        const remainingAttempts = maxAttempts - attempts;
+
+        //Вместо команды /restart
+        const keyboard =
+          remainingAttempts > 0
+            ? Markup.inlineKeyboard([Markup.button.callback('Попробовать снова', `restart_verification:${chatId}`)])
+            : undefined;
+
         let text = failStep.text.replace('{count}', remainingAttempts.toString());
-        if ([2, 3, 4].includes(remainingAttempts)) {
-          text = text.replace('{try_noun}', 'попытки');
-        } else if (remainingAttempts === 1) {
-          text = text.replace('{try_noun}', 'попытка');
-        } else {
-          text = text.replace('{try_noun}', 'попыток');
-        }
+        text = text.replace('{try_noun}', this.getTryNoun(remainingAttempts));
         //
         try {
           if (failStep.image) {
-            await this.mediaService.sendPhoto(ctx, failStep.image, { caption: text, reply_markup: { inline_keyboard: [] } });
+            await this.mediaService.sendPhoto(ctx, failStep.image, {
+              caption: text,
+              reply_markup: keyboard?.reply_markup ?? { inline_keyboard: [] },
+            });
           } else {
-            await ctx.reply(text);
+            await ctx.reply(text, keyboard);
           }
         } catch (e) {
           console.error(`[Scene] Failed to show failure message to user ${userId}.`, e);
@@ -276,5 +283,11 @@ export class VerificationSceneService {
 
     ctx.scene.state = {};
     return ctx.scene.leave();
+  }
+
+  private getTryNoun(count: number): string {
+    if (count === 1) return 'попытка';
+    if ([2, 3, 4].includes(count)) return 'попытки';
+    return 'попыток';
   }
 }
