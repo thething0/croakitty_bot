@@ -6,9 +6,10 @@ export interface UserRecord {
   chat_id: number;
   is_muted: boolean;
   attempts: number;
+  last_attempt: number | null;
 }
 
-type DBUserRecord = Omit<UserRecord, 'is_muted'> & { is_muted: number };
+type DBUserRecord = Omit<UserRecord, 'is_muted' | 'last_attempt'> & { is_muted: number; last_attempt: number | null };
 
 export class DatabaseService {
   public readonly db: DB;
@@ -18,8 +19,8 @@ export class DatabaseService {
     findUser: Statement<[number, number]>;
     findUserOnly: Statement<[number]>;
     findAllUserRecords: Statement<[number]>;
-    createUser: Statement<[number, number]>;
-    updateUser: Statement<[number | null, number | null, number, number]>;
+    createUser: Statement<[number, number, number]>;
+    updateUser: Statement<[number | null, number | null, number | null, number, number]>;
     resetAttempts: Statement;
     getAllMediaCache: Statement; // для "прогрева"
     setMediaCache: Statement<[string, string]>; // для сохранения
@@ -34,11 +35,11 @@ export class DatabaseService {
       findUserOnly: this.db.prepare('SELECT * FROM users WHERE user_id = ? LIMIT 1'),
       findAllUserRecords: this.db.prepare('SELECT * FROM users WHERE user_id = ?'),
       createUser: this.db.prepare(`
-        INSERT INTO users (user_id, chat_id)
-        VALUES (?, ?) ON CONFLICT(user_id, chat_id) DO
+        INSERT INTO users (user_id, chat_id, last_attempt)
+        VALUES (?, ?, ?) ON CONFLICT(user_id, chat_id) DO
         UPDATE SET user_id = user_id RETURNING *`),
       updateUser: this.db.prepare(
-        'UPDATE users SET is_muted = COALESCE(?, is_muted), attempts = COALESCE(?, attempts) WHERE user_id = ? AND chat_id = ?',
+        'UPDATE users SET is_muted = COALESCE(?, is_muted), attempts = COALESCE(?, attempts), last_attempt = COALESCE(?, last_attempt) WHERE user_id = ? AND chat_id = ?',
       ),
       resetAttempts: this.db.prepare('UPDATE users SET attempts = 0 WHERE attempts > 0'),
       getAllMediaCache: this.db.prepare('SELECT path, file_id FROM media_cache'),
@@ -60,6 +61,7 @@ export class DatabaseService {
           chat_id BIGINT NOT NULL,
           is_muted INTEGER NOT NULL DEFAULT 1 CHECK (is_muted IN (0, 1)),
           attempts INTEGER NOT NULL DEFAULT 0,
+          last_attempt INTEGER,
           UNIQUE ( user_id, chat_id )
           );
         `;
@@ -105,20 +107,21 @@ export class DatabaseService {
   }
 
   public createUser(userId: number, chatId: number): UserRecord {
-    const row = this.stmts.createUser.get(userId, chatId) as DBUserRecord;
+    const row = this.stmts.createUser.get(userId, chatId, Date.now()) as DBUserRecord;
     if (row) return this._fromDB(row);
 
     throw new Error(`Unexpected state: user (${userId}, ${chatId}) should exist after INSERT OR IGNORE`);
   }
 
-  public updateUser(userId: number, chatId: number, data: Partial<Pick<UserRecord, 'is_muted' | 'attempts'>>): void {
-    const isMutedValue = typeof data.is_muted === 'boolean' ? +data.is_muted : null;
-    const attemptsValue = typeof data.attempts === 'number' ? data.attempts : null;
+  public updateUser(userId: number, chatId: number, data: Partial<Pick<UserRecord, 'is_muted' | 'attempts' | 'last_attempt'>>): void {
+    const isMutedValue = typeof data.is_muted === 'undefined' ? null : +data.is_muted;
+    const attemptsValue = typeof data.attempts === 'undefined' ? null : data.attempts;
+    const lastAttempt = typeof data.last_attempt === 'undefined' ? null : data.last_attempt;
 
     if (isMutedValue === null && attemptsValue === null) {
-      return; // Ничего не делаем, если не передано данных для обновления
+      return;
     }
-    this.stmts.updateUser.run(isMutedValue, attemptsValue, userId, chatId);
+    this.stmts.updateUser.run(isMutedValue, attemptsValue, lastAttempt, userId, chatId);
   }
 
   public resetAllAttempts(): number {
@@ -141,6 +144,6 @@ export class DatabaseService {
   }
   public findAllUserRecords(userId: number): UserRecord[] {
     const rows = this.stmts.findAllUserRecords.all(userId) as DBUserRecord[];
-    return rows.map(row => this._fromDB(row));
+    return rows.map((row) => this._fromDB(row));
   }
 }

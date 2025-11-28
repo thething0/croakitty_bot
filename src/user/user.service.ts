@@ -51,14 +51,14 @@ export class UserService {
   public recordQuizAttempt(userId: number, chatId: number): false | number {
     const user = this.dbService.findUser(userId, chatId);
     if (user) {
-      this.dbService.updateUser(userId, chatId, { attempts: user.attempts + 1 });
+      this.dbService.updateUser(userId, chatId, { attempts: user.attempts + 1, last_attempt: Date.now() });
       return user.attempts + 1;
     }
     return false;
   }
 
   public grantChatAccess(userId: number, chatId: number): void {
-    this.dbService.updateUser(userId, chatId, { is_muted: false });
+    this.dbService.updateUser(userId, chatId, { is_muted: false, last_attempt: Date.now() });
   }
 
   public findAllUserRecords(userId: number): UserRecord[] {
