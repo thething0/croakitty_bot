@@ -49,9 +49,23 @@ export class BotService {
     this.botInfo = await this.bot.telegram.getMe();
 
     this.registerHandlers();
-    console.log('✅ Bot service configured. Launching...');
-    await this.bot.launch(async () => {
+    console.log('✅ Bot service configured.');
+    /*await this.bot.launch(async () => {
       console.log('✅ Bot service initialized and bot launched.');
+    });*/
+  }
+
+  public start(): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      this.bot
+        .launch(() => {
+          console.log('✅ Bot service initialized and bot launched.');
+          resolve();
+        })
+        .catch((err) => {
+          console.error('Failed to launch bot:', err);
+          reject(err);
+        });
     });
   }
 
