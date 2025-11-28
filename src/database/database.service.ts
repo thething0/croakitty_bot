@@ -22,6 +22,7 @@ export class DatabaseService {
     createUser: Statement<[number, number, number]>;
     updateUser: Statement<[number | null, number | null, number | null, number, number]>;
     resetAttempts: Statement;
+    resetExpiredAttempts: Statement<[number]>;
     getAllMediaCache: Statement; // для "прогрева"
     setMediaCache: Statement<[string, string]>; // для сохранения
   };
@@ -42,6 +43,7 @@ export class DatabaseService {
         'UPDATE users SET is_muted = COALESCE(?, is_muted), attempts = COALESCE(?, attempts), last_attempt = COALESCE(?, last_attempt) WHERE user_id = ? AND chat_id = ?',
       ),
       resetAttempts: this.db.prepare('UPDATE users SET attempts = 0 WHERE attempts > 0'),
+      resetExpiredAttempts: this.db.prepare('UPDATE users SET attempts = 0 WHERE attempts > 0 AND last_attempt <= ?'),
       getAllMediaCache: this.db.prepare('SELECT path, file_id FROM media_cache'),
       setMediaCache: this.db.prepare(
         'INSERT INTO media_cache (path, file_id) VALUES (?, ?) ON CONFLICT(path) DO UPDATE SET file_id = excluded.file_id',
@@ -84,7 +86,7 @@ export class DatabaseService {
 
       this.db.exec('COMMIT');
       this.initialized = true;
-      console.log('✅ Database initialized successfully.');
+      console.log('Database initialized successfully.');
     } catch (e) {
       this.db.exec('ROLLBACK');
       throw e;
@@ -126,6 +128,10 @@ export class DatabaseService {
 
   public resetAllAttempts(): number {
     return this.stmts.resetAttempts.run().changes;
+  }
+
+  public resetExpiredAttempts(thresholdTimestamp: number): number {
+    return this.stmts.resetExpiredAttempts.run(thresholdTimestamp).changes;
   }
 
   public getAllMediaCache(): { path: string; file_id: string }[] {

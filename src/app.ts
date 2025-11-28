@@ -38,14 +38,26 @@ export class App {
       this.mediaService,
     );
 
+    console.log('Checking for expired attempts on startup...');
+    this.userService.checkAndResetAttempts();
+    this.runScheduler();
+
     this.botService = new BotService(this.configService, this.databaseService, this.verificationSceneService, this.userService);
   }
 
   public async init() {
-    /*this.databaseService.init();*/
     await this.botService.init();
 
     this.registerShutdownHooks();
+  }
+
+  private runScheduler() {
+    const CHECK_INTERVAL_MS = 5 * 60 * 1000; //раз в 5 минут
+
+    setTimeout(() => {
+      this.userService.checkAndResetAttempts();
+      this.runScheduler();
+    }, CHECK_INTERVAL_MS);
   }
 
   private registerShutdownHooks(): void {

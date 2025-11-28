@@ -64,4 +64,17 @@ export class UserService {
   public findAllUserRecords(userId: number): UserRecord[] {
     return this.dbService.findAllUserRecords(userId);
   }
+
+  public checkAndResetAttempts(): void {
+    try {
+      const intervalHours = +this.configService.get('RESET_INTERVAL_H', '168'); //по умолчанию неделя
+      const threshold = Date.now() - (intervalHours * 60 * 60 * 1000);
+      const changes = this.dbService.resetExpiredAttempts(threshold);
+      if (changes > 0) {
+        console.log(`[Scheduler] Attempts reset for ${changes} users.`);
+      }
+    } catch (e) {
+      console.error('[Scheduler] Error while resetting attempts:', e);
+    }
+  }
 }
