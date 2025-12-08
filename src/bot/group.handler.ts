@@ -28,8 +28,6 @@ export class GroupHandler {
           await ctx.telegram.restrictChatMember(ctx.chat.id, member.id, {
             permissions: BotService.mutePermissions,
           });
-          console.log('NEW MEMBER JOINED! ', member);
-          console.log('TO THE CHAT', ctx.chat);
 
           this.userService.handleNewMemberJoined(member.id, ctx.chat.id);
 

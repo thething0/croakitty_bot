@@ -57,7 +57,7 @@ export class App {
   public async init() {
     await this.botService.init();
 
-    console.log('Checking for expired attempts on startup...');
+    console.log('[App] Checking for expired attempts on startup...');
     this.userService.checkAndResetAttempts();
     this.runScheduler();
 

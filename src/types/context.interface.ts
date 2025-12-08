@@ -1,4 +1,4 @@
-import { type Context, type Scenes } from 'telegraf'; // Шаг 1: Описываем данные, которые нам нужно хранить в состоянии сцены.
+import { type Context, type Scenes } from 'telegraf';
 
 interface VerificationState {
   chatId: number;

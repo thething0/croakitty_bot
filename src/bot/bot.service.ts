@@ -54,9 +54,6 @@ export class BotService {
     this.registerHandlers();
 
     console.log('[BotService] Bot service configured.');
-    /*await this.bot.launch(async () => {
-      console.log('✅ Bot service initialized and bot launched.');
-    });*/
   }
 
   public start(): Promise<void> {
@@ -83,7 +80,7 @@ export class BotService {
 
   public stop(signal: string): void {
     this.bot.stop(signal);
-    console.log(`⏹️ Bot stopped due to ${signal} signal.`);
+    console.log(`[BotService] Bot stopped due to ${signal} signal.`);
   }
 
   private static _mutePermissions: ExtraRestrictChatMember['permissions'] = {

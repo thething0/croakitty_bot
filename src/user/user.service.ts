@@ -2,10 +2,6 @@ import { type IConfigService } from '../config/config.interface';
 
 import { type DatabaseService, type UserRecord } from '../database/database.service';
 
-/**
- * Сервис бизнес-логики для управления пользователями.
- * Инкапсулирует правила: количество попыток, статусы мьюта и т.д.
- */
 export enum VerificationStatus {
   ALLOWED,
   LIMIT_REACHED,
@@ -48,7 +44,7 @@ export class UserService {
     return VerificationStatus.ALLOWED;
   }
 
-  public recordQuizAttempt(userId: number, chatId: number): false | number {
+  public recordVerificationAttempt(userId: number, chatId: number): false | number {
     const user = this.dbService.findUser(userId, chatId);
     if (user) {
       this.dbService.updateUser(userId, chatId, { attempts: user.attempts + 1, last_attempt: Date.now() });
@@ -71,10 +67,10 @@ export class UserService {
       const threshold = Date.now() - intervalHours * 60 * 60 * 1000;
       const changes = this.dbService.resetExpiredAttempts(threshold);
       if (changes > 0) {
-        console.log(`[Scheduler] Attempts reset for ${changes} users.`);
+        console.log(`[UserService] Attempts reset for ${changes} users.`);
       }
     } catch (e) {
-      console.error('[Scheduler] Error while resetting attempts:', e);
+      console.error('[UserService] Error while resetting attempts:', e);
     }
   }
 }

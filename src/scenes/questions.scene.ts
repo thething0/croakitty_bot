@@ -165,7 +165,7 @@ export class QuestionsScene {
       }
     } else {
       // --- ПРОВАЛ ---
-      const attempts = this.userService.recordQuizAttempt(userId, chatId);
+      const attempts = this.userService.recordVerificationAttempt(userId, chatId);
       const maxAttempts = +this.configService.get('MAX_ATTEMPTS', '3'); //из env
       const currentAttempts = attempts === false ? maxAttempts : attempts;
       const remaining = maxAttempts - currentAttempts;
