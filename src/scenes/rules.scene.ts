@@ -1,6 +1,6 @@
 import { Scenes } from 'telegraf';
 
-import { type MyContext } from '../types/context.interface';
+import { type VerificationContext } from '../types/context.interface';
 import { type ISceneStep } from '../verification/verification.interface';
 import { type VerificationContentService } from '../verification/verification.service';
 import { type ButtonData, type VerificationView, type ViewData } from '../verification/verification.view';
@@ -11,11 +11,11 @@ export class RulesScene {
     private readonly view: VerificationView,
   ) {}
 
-  public create(): Scenes.WizardScene<MyContext> {
-    return new Scenes.WizardScene<MyContext>('rules', this.onEnterScene.bind(this), this.handleAnswer.bind(this));
+  public create(): Scenes.WizardScene<VerificationContext> {
+    return new Scenes.WizardScene<VerificationContext>('rules', this.onEnterScene.bind(this), this.handleAnswer.bind(this));
   }
 
-  private async onEnterScene(ctx: MyContext) {
+  private async onEnterScene(ctx: VerificationContext) {
     try {
       const rules = this.contentService.getRuleSteps();
       if (rules.length === 0) {
@@ -31,7 +31,7 @@ export class RulesScene {
     }
   }
 
-  private async handleAnswer(ctx: MyContext) {
+  private async handleAnswer(ctx: VerificationContext) {
     if (!ctx.callbackQuery || !('data' in ctx.callbackQuery)) return;
 
     const action = ctx.callbackQuery.data;

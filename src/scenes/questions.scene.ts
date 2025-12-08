@@ -4,7 +4,7 @@ import { type IConfigService } from '../config/config.interface';
 
 import { BotService } from '../bot/bot.service';
 
-import { type MyContext } from '../types/context.interface';
+import { type VerificationContext } from '../types/context.interface';
 import { type UserService, VerificationStatus } from '../user/user.service';
 import { type ISceneStep } from '../verification/verification.interface';
 import { type VerificationContentService } from '../verification/verification.service';
@@ -18,11 +18,11 @@ export class QuestionsScene {
     private readonly view: VerificationView,
   ) {}
 
-  public create(): Scenes.WizardScene<MyContext> {
-    return new Scenes.WizardScene<MyContext>('questions', this.onEnterScene.bind(this), this.handleAnswer.bind(this));
+  public create(): Scenes.WizardScene<VerificationContext> {
+    return new Scenes.WizardScene<VerificationContext>('questions', this.onEnterScene.bind(this), this.handleAnswer.bind(this));
   }
 
-  private async onEnterScene(ctx: MyContext) {
+  private async onEnterScene(ctx: VerificationContext) {
     const state = ctx.wizard.state;
     if (!state || typeof state.userId === 'undefined' || typeof state.chatId === 'undefined') {
       console.error('[QuestionsScene] State is not initialized properly');
@@ -66,7 +66,7 @@ export class QuestionsScene {
     }
   }
 
-  private async handleAnswer(ctx: MyContext) {
+  private async handleAnswer(ctx: VerificationContext) {
     if (!ctx.callbackQuery || !('data' in ctx.callbackQuery)) {
       return;
     }
@@ -124,7 +124,7 @@ export class QuestionsScene {
     }
   }
 
-  private async finishVerification(ctx: MyContext) {
+  private async finishVerification(ctx: VerificationContext) {
     const { chatId, userId, answers } = ctx.wizard.state;
     const questions = this.contentService.getQuestions();
     const passThreshold = this.contentService.getPassThreshold();

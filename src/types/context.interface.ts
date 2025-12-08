@@ -1,17 +1,17 @@
 import { type Context, type Scenes } from 'telegraf'; // Шаг 1: Описываем данные, которые нам нужно хранить в состоянии сцены.
 
-interface MyWizardState {
+interface VerificationState {
   chatId: number;
   userId: number;
   currentStep: number;
   answers: number[];
 }
 
-type MyWizardSessionData = Scenes.WizardSessionData & { state: MyWizardState };
-export type MyWizardSession = Scenes.WizardSession<MyWizardSessionData>;
+type VerificationSessionData = Scenes.WizardSessionData & { state: VerificationState };
+export type VerificationSession = Scenes.WizardSession<VerificationSessionData>;
 
-export interface MyContext extends Context {
-  session: MyWizardSession;
-  scene: Scenes.SceneContextScene<MyContext, MyWizardSessionData>;
-  wizard: Scenes.WizardContextWizard<MyContext> & { state: MyWizardState };
+export interface VerificationContext extends Context {
+  session: VerificationSession;
+  scene: Scenes.SceneContextScene<VerificationContext, VerificationSessionData>;
+  wizard: Scenes.WizardContextWizard<VerificationContext> & { state: VerificationState };
 }

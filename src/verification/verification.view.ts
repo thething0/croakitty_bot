@@ -3,7 +3,7 @@ import { type InlineKeyboardMarkup } from 'telegraf/typings/core/types/typegram'
 
 import { type MediaService } from '../bot/media.service';
 
-import { type MyContext } from '../types/context.interface';
+import { type VerificationContext } from '../types/context.interface';
 
 export interface ButtonData {
   text: string;
@@ -24,7 +24,7 @@ export class VerificationView {
     return Markup.inlineKeyboard(buttonRows);
   }
 
-  public async show(ctx: MyContext, params: ViewData) {
+  public async show(ctx: VerificationContext, params: ViewData) {
     const CAPTION_LIMIT = 1024;
     const { text, image, buttons } = params;
 
@@ -54,7 +54,7 @@ export class VerificationView {
   }
 
   private async sendNew(
-    ctx: MyContext,
+    ctx: VerificationContext,
     params: Omit<ViewData, 'buttons'> & {
       keyboard: Markup.Markup<InlineKeyboardMarkup>;
     },
@@ -67,7 +67,7 @@ export class VerificationView {
   }
 
   private async edit(
-    ctx: MyContext,
+    ctx: VerificationContext,
     params: Omit<ViewData, 'buttons'> & {
       keyboard: Markup.Markup<InlineKeyboardMarkup>;
     },

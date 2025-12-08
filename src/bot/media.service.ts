@@ -4,7 +4,7 @@ import { type InlineKeyboardMarkup } from 'telegraf/typings/core/types/typegram'
 import { type IConfigService } from '../config/config.interface';
 
 import { type CacheService } from '../cache/cache.service';
-import { type MyContext } from '../types/context.interface';
+import { type VerificationContext } from '../types/context.interface';
 
 export class MediaService {
   constructor(
@@ -13,7 +13,7 @@ export class MediaService {
   ) {}
 
   public async sendPhoto(
-    ctx: MyContext,
+    ctx: VerificationContext,
     imagePath: string,
     options: { caption: string; reply_markup: InlineKeyboardMarkup },
   ): Promise<void> {
@@ -50,7 +50,7 @@ export class MediaService {
   }
 
   public async editPhoto(
-    ctx: MyContext,
+    ctx: VerificationContext,
     imagePath: string,
     options: { caption: string; reply_markup: InlineKeyboardMarkup },
   ): Promise<void> {

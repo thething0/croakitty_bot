@@ -8,14 +8,14 @@ import { type IConfigService } from '../config/config.interface';
 import { type DatabaseService } from '../database/database.service';
 import { type QuestionsScene } from '../scenes/questions.scene';
 import { type RulesScene } from '../scenes/rules.scene';
-import { type MyContext, type MyWizardSession } from '../types/context.interface';
+import { type VerificationContext, type VerificationSession } from '../types/context.interface';
 import { type UserService } from '../user/user.service';
 
 import { GroupHandler } from './group.handler';
 import { PrivateHandler } from './private.handler';
 
 export class BotService {
-  public readonly bot: Telegraf<MyContext>;
+  public readonly bot: Telegraf<VerificationContext>;
   private botInfo!: ReturnType<Telegram['getMe']>;
 
   constructor(
@@ -26,13 +26,13 @@ export class BotService {
     private readonly rulesScene: RulesScene,
     private readonly questionsScene: QuestionsScene,
   ) {
-    this.bot = new Telegraf<MyContext>(this.configService.get('BOT_TOKEN'));
+    this.bot = new Telegraf<VerificationContext>(this.configService.get('BOT_TOKEN'));
   }
 
   public async init(): Promise<void> {
-    const stage = new Scenes.Stage<MyContext>([this.rulesScene.create(), this.questionsScene.create()]);
+    const stage = new Scenes.Stage<VerificationContext>([this.rulesScene.create(), this.questionsScene.create()]);
 
-    const store = SQLite<MyWizardSession>({
+    const store = SQLite<VerificationSession>({
       database: this.dbService.db,
     });
 

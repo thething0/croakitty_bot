@@ -1,11 +1,11 @@
 import { Markup, type Telegraf } from 'telegraf';
 
-import { type MyContext } from '../types/context.interface';
+import { type VerificationContext } from '../types/context.interface';
 import { type UserService } from '../user/user.service';
 
 export class PrivateHandler {
   constructor(
-    private readonly bot: Telegraf<MyContext>,
+    private readonly bot: Telegraf<VerificationContext>,
     private readonly userService: UserService,
   ) {}
 
@@ -53,7 +53,7 @@ export class PrivateHandler {
     });
   }
 
-  private async runVerification(ctx: MyContext, chatId?: number) {
+  private async runVerification(ctx: VerificationContext, chatId?: number) {
     const userId = ctx.from!.id;
 
     if (!chatId) {
@@ -77,7 +77,7 @@ export class PrivateHandler {
     return await this.enterVerification(ctx, chatId);
   }
 
-  private async enterVerification(ctx: MyContext, chatId: number) {
+  private async enterVerification(ctx: VerificationContext, chatId: number) {
     const initialState = {
       chatId,
       userId: ctx.from!.id,

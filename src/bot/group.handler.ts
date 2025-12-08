@@ -5,12 +5,12 @@ import { type User } from 'telegraf/typings/core/types/typegram';
 
 import { BotService } from './bot.service';
 
-import { type MyContext } from '../types/context.interface';
+import { type VerificationContext } from '../types/context.interface';
 import { type UserService } from '../user/user.service';
 
 export class GroupHandler {
   constructor(
-    private readonly bot: Telegraf<MyContext>,
+    private readonly bot: Telegraf<VerificationContext>,
     private readonly userService: UserService,
     private readonly botInfo: ReturnType<Telegram['getMe']>,
   ) {}
