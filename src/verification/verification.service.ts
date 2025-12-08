@@ -3,11 +3,12 @@ import path from 'node:path';
 
 import { type IConfigService } from '../config/config.interface';
 
-import { type ISceneStep, type IVerificationContentService } from './verification.interface';
+import { type ISceneStep } from './verification.interface';
 
-export class VerificationContentService implements IVerificationContentService {
-  private readonly steps!: ISceneStep[];
-  private readonly serviceSteps!: Record<string, ISceneStep>;
+export class VerificationContentService {
+  private readonly rules!: ISceneStep[];
+  private readonly questions!: ISceneStep[];
+  private readonly misc!: Record<string, ISceneStep>;
 
   constructor(private readonly configService: IConfigService) {
     const contentPath = this.configService.get('CONTENT_PATH', 'data/steps.json');
@@ -16,33 +17,38 @@ export class VerificationContentService implements IVerificationContentService {
     try {
       //нет смысла в асинхронности, подгрузка раз при старте
       const fileContent = fs.readFileSync(absolutePath, 'utf-8');
-      const questions = JSON.parse(fileContent) as {
-        steps: ISceneStep[];
-        serviceSteps: Record<string, ISceneStep>;
+      const data = JSON.parse(fileContent) as {
+        rules: ISceneStep[];
+        questions: ISceneStep[];
+        misc: Record<string, ISceneStep>;
       };
 
-      if (!questions.steps || !questions.serviceSteps) {
+      if (!data.rules || !data.questions || !data.misc) {
         throw new Error('Content file is missing "steps" or "serviceSteps" properties.');
       }
 
-      this.steps = questions.steps;
-      this.serviceSteps = questions.serviceSteps;
-      console.log(`✅ Content loaded successfully from ${contentPath}`);
+      this.rules = data.rules;
+      this.questions = data.questions;
+      this.misc = data.misc;
+      console.log(`[ContentService] Content loaded successfully from ${contentPath}`);
     } catch (e) {
-      console.error(`[ContentService] FATAL: Could not read or parse content file at ${absolutePath}.`, e);
-      process.exit(1);
+      console.error(`[ContentService] Could not read or parse content file at ${absolutePath}.`, e);
     }
   }
 
-  public getPassThreshold(): number {
-    // Считаем только шаги, которые являются вопросами
-    return this.steps.filter((step) => step.options).length;
+  public getRuleSteps(): ISceneStep[] {
+    return this.rules;
   }
 
-  public getSteps(): ISceneStep[] {
-    return this.steps;
+  public getQuestions(): ISceneStep[] {
+    return this.questions;
   }
+
+  public getPassThreshold(): number {
+    return this.questions.length - 1; //TODO: настроить через env
+  }
+
   public getServiceStep(step: string): ISceneStep {
-    return this.serviceSteps?.[step];
+    return this.misc?.[step];
   }
 }

@@ -12,7 +12,11 @@ export class MediaService {
     private readonly configService: IConfigService,
   ) {}
 
-  public async sendPhoto(ctx: MyContext, imagePath: string, options: { caption: string; reply_markup: InlineKeyboardMarkup }): Promise<void> {
+  public async sendPhoto(
+    ctx: MyContext,
+    imagePath: string,
+    options: { caption: string; reply_markup: InlineKeyboardMarkup },
+  ): Promise<void> {
     const imageFullPath = path.join(/*process.cwd(),*/ this.configService.get('MEDIA_PATH', './media'), imagePath);
     const fileId = this.cacheService.getFileId(imageFullPath) as string | undefined;
 
@@ -45,7 +49,11 @@ export class MediaService {
     }
   }
 
-  public async editPhoto(ctx: MyContext, imagePath: string, options: { caption: string; reply_markup: InlineKeyboardMarkup }): Promise<void> {
+  public async editPhoto(
+    ctx: MyContext,
+    imagePath: string,
+    options: { caption: string; reply_markup: InlineKeyboardMarkup },
+  ): Promise<void> {
     const imageFullPath = path.join(this.configService.get('MEDIA_PATH', './media'), imagePath);
     const fileId = this.cacheService.getFileId(imageFullPath) as string | undefined;
 

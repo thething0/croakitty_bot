@@ -1,0 +1,84 @@
+import { Scenes } from 'telegraf';
+
+import { type MyContext } from '../types/context.interface';
+import { type ISceneStep } from '../verification/verification.interface';
+import { type VerificationContentService } from '../verification/verification.service';
+import { type ButtonData, type VerificationView, type ViewData } from '../verification/verification.view';
+
+export class RulesScene {
+  constructor(
+    private readonly contentService: VerificationContentService,
+    private readonly view: VerificationView,
+  ) {}
+
+  public create(): Scenes.WizardScene<MyContext> {
+    return new Scenes.WizardScene<MyContext>('rules', this.onEnterScene.bind(this), this.handleAnswer.bind(this));
+  }
+
+  private async onEnterScene(ctx: MyContext) {
+    try {
+      const rules = this.contentService.getRuleSteps();
+      if (rules.length === 0) {
+        return ctx.scene.enter('questions', ctx.scene.state); //Сразу к тесту, если правил нет
+      }
+
+      ctx.wizard.state.currentStep = 0;
+      const viewData = this.getRuleViewData(rules[0], 0);
+      await this.view.show(ctx, viewData);
+      return ctx.wizard.next();
+    } catch (e) {
+      console.error('[RulesScene] Entry error', e);
+    }
+  }
+
+  private async handleAnswer(ctx: MyContext) {
+    if (!ctx.callbackQuery || !('data' in ctx.callbackQuery)) return;
+
+    const action = ctx.callbackQuery.data;
+    const rules = this.contentService.getRuleSteps();
+    const state = ctx.wizard.state;
+    try {
+      if (action === 'back') {
+        if (state.currentStep > 0) {
+          state.currentStep--;
+          const viewData = this.getRuleViewData(rules[state.currentStep], state.currentStep);
+          await this.view.show(ctx, viewData);
+        } else {
+          await ctx.answerCbQuery('Это начало.');
+        }
+        return;
+      }
+
+      if (action === 'next') {
+        state.currentStep++;
+        if (state.currentStep >= rules.length) {
+          return ctx.scene.enter('questions', ctx.scene.state);
+        }
+
+        const viewData = this.getRuleViewData(rules[state.currentStep], state.currentStep);
+        await this.view.show(ctx, viewData);
+      }
+    } catch (e) {
+      console.error('[RulesScene] Action error', e);
+    } finally {
+      await ctx.answerCbQuery().catch(() => {});
+    }
+  }
+
+  private getRuleViewData(step: ISceneStep, stepIndex: number): ViewData {
+    const buttons: ButtonData[] = [];
+
+    const btnText = step.buttonText || 'Понятно';
+    buttons.push({ text: btnText, data: 'next' });
+
+    if (stepIndex > 0) {
+      buttons.push({ text: '⬅️ Назад', data: 'back' });
+    }
+
+    return {
+      text: step.text,
+      image: step.image,
+      buttons: buttons,
+    };
+  }
+}

@@ -11,9 +11,7 @@ export class ConfigService implements IConfigService {
     const value = process.env[key] ?? byDefault;
 
     if (typeof value === 'undefined') {
-      throw new Error(
-        `[ConfigService] Configuration key '${key}' is not set in environment variables.`,
-      );
+      throw new Error(`[ConfigService] Configuration key '${key}' is not set in environment variables.`);
     }
 
     return value;

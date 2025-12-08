@@ -6,10 +6,11 @@ import { MediaService } from './bot/media.service';
 
 import { CacheService } from './cache/cache.service';
 import { DatabaseService } from './database/database.service';
-import { VerificationSceneService } from './scenes/verification.scene.service';
+import { QuestionsScene } from './scenes/questions.scene';
+import { RulesScene } from './scenes/rules.scene';
 import { UserService } from './user/user.service';
-import { type IVerificationContentService } from './verification/verification.interface';
 import { VerificationContentService } from './verification/verification.service';
+import { VerificationView } from './verification/verification.view';
 
 export class App {
   private readonly configService: IConfigService;
@@ -17,8 +18,10 @@ export class App {
   private readonly cacheService: CacheService;
   private readonly mediaService: MediaService;
   private readonly userService: UserService;
-  private readonly verificationContentService: IVerificationContentService;
-  private readonly verificationSceneService: VerificationSceneService;
+  private readonly verificationContentService: VerificationContentService;
+  private readonly verificationView: VerificationView;
+  private readonly questionsScene: QuestionsScene;
+  private readonly rulesScene: RulesScene;
   private readonly botService: BotService;
 
   constructor() {
@@ -31,14 +34,24 @@ export class App {
 
     this.userService = new UserService(this.databaseService, this.configService);
     this.verificationContentService = new VerificationContentService(this.configService);
-    this.verificationSceneService = new VerificationSceneService(
+
+    this.verificationView = new VerificationView(this.mediaService);
+
+    this.rulesScene = new RulesScene(this.verificationContentService, this.verificationView);
+    this.questionsScene = new QuestionsScene(
       this.configService,
       this.userService,
       this.verificationContentService,
-      this.mediaService,
+      this.verificationView,
     );
 
-    this.botService = new BotService(this.configService, this.databaseService, this.verificationSceneService, this.userService);
+    this.botService = new BotService(
+      this.configService,
+      this.databaseService,
+      this.userService,
+      this.rulesScene,
+      this.questionsScene,
+    );
   }
 
   public async init() {

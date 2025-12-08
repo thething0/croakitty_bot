@@ -6,7 +6,8 @@ import type { ExtraRestrictChatMember } from 'telegraf/typings/telegram-types';
 import { type IConfigService } from '../config/config.interface';
 
 import { type DatabaseService } from '../database/database.service';
-import { type VerificationSceneService } from '../scenes/verification.scene.service';
+import { type QuestionsScene } from '../scenes/questions.scene';
+import { type RulesScene } from '../scenes/rules.scene';
 import { type MyContext, type MyWizardSession } from '../types/context.interface';
 import { type UserService } from '../user/user.service';
 
@@ -20,15 +21,16 @@ export class BotService {
   constructor(
     private readonly configService: IConfigService,
     private readonly dbService: DatabaseService,
-    private readonly verificationSceneService: VerificationSceneService,
     private readonly userService: UserService,
+    // мб стоит потом перенести внутрь
+    private readonly rulesScene: RulesScene,
+    private readonly questionsScene: QuestionsScene,
   ) {
     this.bot = new Telegraf<MyContext>(this.configService.get('BOT_TOKEN'));
   }
 
   public async init(): Promise<void> {
-    const verificationScene = this.verificationSceneService.createScene();
-    const stage = new Scenes.Stage<MyContext>([verificationScene]);
+    const stage = new Scenes.Stage<MyContext>([this.rulesScene.create(), this.questionsScene.create()]);
 
     const store = SQLite<MyWizardSession>({
       database: this.dbService.db,
@@ -49,7 +51,8 @@ export class BotService {
     this.botInfo = await this.bot.telegram.getMe();
 
     this.registerHandlers();
-    console.log('✅ Bot service configured.');
+
+    console.log('[BotService] Bot service configured.');
     /*await this.bot.launch(async () => {
       console.log('✅ Bot service initialized and bot launched.');
     });*/
@@ -59,11 +62,11 @@ export class BotService {
     return new Promise<void>((resolve, reject) => {
       this.bot
         .launch(() => {
-          console.log('✅ Bot service initialized and bot launched.');
+          console.log('[BotService] Bot service initialized and bot launched.');
           resolve();
         })
         .catch((err) => {
-          console.error('Failed to launch bot:', err);
+          console.error('[BotService] Failed to launch bot:', err);
           reject(err);
         });
     });

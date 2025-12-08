@@ -5,9 +5,3 @@ export interface ISceneStep {
   correctAnswers?: number[];
   buttonText?: string;
 }
-
-export interface IVerificationContentService {
-  getSteps(): ISceneStep[];
-  getServiceStep(step: string): ISceneStep;
-  getPassThreshold(): number;
-}
