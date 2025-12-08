@@ -85,7 +85,7 @@ export class DatabaseService {
   //кеш медиафайлов
 
   public getAllMediaCache(): { path: string; file_id: string }[] {
-    return this.db.prepare('SELECT path, file_id FROM media_cache').all() as any;
+    return this.db.prepare('SELECT path, file_id FROM media_cache').all() as { path: string; file_id: string }[];
   }
 
   public setFileId(path: string, fileId: string): void {
