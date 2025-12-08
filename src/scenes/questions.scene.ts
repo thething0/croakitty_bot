@@ -205,7 +205,7 @@ export class QuestionsScene {
 
     const buttons: ButtonData[] = [];
     if (step.options?.length) {
-      const answerButtons = step.options.map((_, idx) => ({ text: (idx + 1).toString(), data: idx.toString() }));
+      const answerButtons = step.options.map((text, idx) => ({ text: `${idx + 1}. ${text}`, data: idx.toString() }));
       buttons.push(...answerButtons);
     }
 

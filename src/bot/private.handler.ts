@@ -9,7 +9,7 @@ export class PrivateHandler {
     private readonly userService: UserService,
   ) {}
 
-  public handleCommands(): void {
+  public handle(): void {
     this.bot.start(async (ctx) => {
       if (ctx.chat.type !== 'private') {
         return;

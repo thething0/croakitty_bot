@@ -15,7 +15,7 @@ export class GroupHandler {
     private readonly botInfo: ReturnType<Telegram['getMe']>,
   ) {}
 
-  public handleEvents(): void {
+  public handle(): void {
     // Обработка входа нового участника, может не работать, проверить
     this.bot.on(message('new_chat_members'), async (ctx) => {
       if (ctx.chat.type !== 'group' && ctx.chat.type !== 'supergroup') {

@@ -36,6 +36,8 @@ export class BotService {
       database: this.dbService.db,
     });
 
+    this.botInfo = await this.bot.telegram.getMe();
+
     this.bot.use(
       session({
         store,
@@ -48,7 +50,6 @@ export class BotService {
       }),
     );
     this.bot.use(stage.middleware());
-    this.botInfo = await this.bot.telegram.getMe();
 
     this.registerHandlers();
 
@@ -76,8 +77,8 @@ export class BotService {
     const privateHandler = new PrivateHandler(this.bot, this.userService);
     const groupHandler = new GroupHandler(this.bot, this.userService, this.botInfo);
 
-    privateHandler.handleCommands();
-    groupHandler.handleEvents();
+    privateHandler.handle();
+    groupHandler.handle();
   }
 
   public stop(signal: string): void {
