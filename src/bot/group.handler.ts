@@ -25,6 +25,21 @@ export class GroupHandler {
       for (const member of ctx.message.new_chat_members) {
         if (member.is_bot) continue;
         try {
+          //проверяем не админ ли
+          const chatMember = await ctx.getChatMember(member.id);
+          const isAdmin = ['creator', 'administrator'].includes(chatMember.status);
+          if (isAdmin) {
+            console.log(`[GroupHandler] User ${member.id} is admin, skipping mute.`);
+            continue;
+          }
+
+          // проверка на реджойн
+          const existingUser = this.userService.findUser(member.id, ctx.chat.id)
+          if (existingUser && existingUser?.is_muted) {
+            console.log(`[GroupHandler] User ${member.id} already verified, skipping mute.`);
+            continue;
+          }
+
           await ctx.telegram.restrictChatMember(ctx.chat.id, member.id, {
             permissions: BotService.mutePermissions,
           });

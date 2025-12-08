@@ -41,9 +41,9 @@ export class DatabaseService {
     console.log('[DatabaseService] Database connection closed.');
   }
 
-  public findUser(userId: number, chatId: number): UserRecord | undefined {
+  public findUser(userId: number, chatId: number): UserRecord {
     const stmt = this.db.prepare('SELECT *, is_muted != 0 as is_muted FROM users WHERE user_id = ? AND chat_id = ?');
-    return stmt.get(userId, chatId) as UserRecord | undefined;
+    return stmt.get(userId, chatId) as UserRecord;
   }
 
   public findAllUserRecords(userId: number): UserRecord[] {

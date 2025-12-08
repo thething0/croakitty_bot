@@ -60,6 +60,9 @@ export class UserService {
   public findAllUserRecords(userId: number): UserRecord[] {
     return this.dbService.findAllUserRecords(userId);
   }
+  public findUser(userId: number, chatId: number): UserRecord {
+    return this.dbService.findUser(userId, chatId);
+  }
 
   public checkAndResetAttempts(): void {
     try {
