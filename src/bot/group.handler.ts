@@ -34,7 +34,7 @@ export class GroupHandler {
           }
 
           // проверка на реджойн
-          const existingUser = this.userService.findUser(member.id, ctx.chat.id)
+          const existingUser = this.userService.findUser(member.id, ctx.chat.id);
           if (existingUser && existingUser?.is_muted) {
             console.log(`[GroupHandler] User ${member.id} already verified, skipping mute.`);
             continue;
@@ -68,7 +68,7 @@ export class GroupHandler {
     const botLink = `https://t.me/${botUsername}?start=${chatId}`;
     const keyboard = Markup.inlineKeyboard([Markup.button.url('Тык сюда', botLink)]);
 
-    const userName = user.username ?? user.first_name ?? 'Безымянный пользователь';
+    const userName = user.username || user.first_name || 'Безымянный пользователь';
     const userMention = `<a href="tg://user?id=${user.id}">${userName}</a>`;
 
     const text = `Привет, ${userMention}! Это Кватёныш, бот этого чата.\nЯ здесь, чтобы сориентировать тебя в правилах чата перед твоим участием в нем.\nПожалуйста, перейди в меня по кнопке ниже.`;
@@ -79,5 +79,9 @@ export class GroupHandler {
     };
 
     return { text, extra };
+  }
+
+  private escapeHTML(text: string) {
+    return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 }
