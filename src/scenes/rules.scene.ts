@@ -19,7 +19,11 @@ export class RulesScene {
     try {
       const rules = this.contentService.getRuleSteps();
       if (rules.length === 0) {
-        return ctx.scene.enter('questions', ctx.scene.state); //Сразу к тесту, если правил нет
+        return ctx.scene.enter('questions', {
+          ...ctx.scene.state,
+          currentStep: 0, // форсируем 0
+          answers: [],
+        }); //Сразу к тесту, если правил нет
       }
 
       ctx.wizard.state.currentStep = 0;
@@ -52,7 +56,11 @@ export class RulesScene {
       if (action === 'next') {
         state.currentStep++;
         if (state.currentStep >= rules.length) {
-          return ctx.scene.enter('questions', ctx.scene.state);
+          return ctx.scene.enter('questions', {
+            ...ctx.scene.state,
+            currentStep: 0,
+            answers: [],
+          });
         }
 
         const viewData = this.getRuleViewData(rules[state.currentStep], state.currentStep);

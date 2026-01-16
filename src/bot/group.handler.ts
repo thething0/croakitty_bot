@@ -35,7 +35,7 @@ export class GroupHandler {
 
           // проверка на реджойн
           const existingUser = this.userService.findUser(member.id, ctx.chat.id);
-          if (existingUser && existingUser?.is_muted) {
+          if (existingUser && !existingUser?.is_muted) {
             console.log(`[GroupHandler] User ${member.id} already verified, skipping mute.`);
             continue;
           }
