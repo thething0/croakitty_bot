@@ -1,15 +1,18 @@
 import path from 'node:path';
 import { type InlineKeyboardMarkup } from 'telegraf/typings/core/types/typegram';
 
-import { type IConfigService } from '../config/config.interface';
+import { ConfigService } from '../config/config.service';
 
-import { type CacheService } from '../cache/cache.service';
+import { Injectable } from '../utils/DI.container';
+
+import { CacheService } from '../cache/cache.service';
 import { type VerificationContext } from '../types/context.interface';
 
+@Injectable()
 export class MediaService {
   constructor(
     private readonly cacheService: CacheService,
-    private readonly configService: IConfigService,
+    private readonly configService: ConfigService,
   ) {}
 
   public async sendPhoto(

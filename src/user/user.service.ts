@@ -1,6 +1,8 @@
-import { type IConfigService } from '../config/config.interface';
+import { ConfigService } from '../config/config.service';
 
-import { type DatabaseService, type UserRecord } from '../database/database.service';
+import { Injectable } from '../utils/DI.container';
+
+import { DatabaseService, type UserRecord } from '../database/database.service';
 
 export enum VerificationStatus {
   ALLOWED,
@@ -9,12 +11,13 @@ export enum VerificationStatus {
   ALREADY_VERIFIED,
 }
 
+@Injectable()
 export class UserService {
   private readonly MAX_ATTEMPTS: number;
 
   constructor(
     private readonly dbService: DatabaseService,
-    private readonly configService: IConfigService,
+    private readonly configService: ConfigService,
   ) {
     this.MAX_ATTEMPTS = +this.configService.get('MAX_ATTEMPTS', '3');
   }

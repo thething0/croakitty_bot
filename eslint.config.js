@@ -36,12 +36,7 @@ export default defineConfig([
     },
 
     rules: {
-      '@typescript-eslint/consistent-type-imports': [
-        'warn',
-        {
-          fixStyle: 'inline-type-imports',
-        },
-      ],
+      '@typescript-eslint/consistent-type-imports': ['off'],
 
       quotes: [
         2,

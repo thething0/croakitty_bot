@@ -3,28 +3,31 @@ import { Scenes, session, Telegraf } from 'telegraf';
 import { type Telegram } from 'telegraf/types';
 import type { ExtraRestrictChatMember } from 'telegraf/typings/telegram-types';
 
-import { type IConfigService } from '../config/config.interface';
+import { ConfigService } from '../config/config.service';
 
-import { type DatabaseService } from '../database/database.service';
-import { type QuestionsScene } from '../scenes/questions.scene';
-import { type RulesScene } from '../scenes/rules.scene';
-import { type VerificationContext, type VerificationSession } from '../types/context.interface';
-import { type UserService } from '../user/user.service';
+import { Injectable } from '../utils/DI.container';
+
+import { DatabaseService } from '../database/database.service';
+import { QuestionsScene } from '../scenes/questions.scene';
+import { RulesScene } from '../scenes/rules.scene';
+import { VerificationContext, type VerificationSession } from '../types/context.interface';
 
 import { GroupHandler } from './group.handler';
 import { PrivateHandler } from './private.handler';
 
+@Injectable()
 export class BotService {
   public readonly bot: Telegraf<VerificationContext>;
   private botInfo!: ReturnType<Telegram['getMe']>;
 
   constructor(
-    private readonly configService: IConfigService,
+    private readonly configService: ConfigService, // Класс
     private readonly dbService: DatabaseService,
-    private readonly userService: UserService,
-    // мб стоит потом перенести внутрь
     private readonly rulesScene: RulesScene,
     private readonly questionsScene: QuestionsScene,
+
+    private readonly groupHandler: GroupHandler,
+    private readonly privateHandler: PrivateHandler,
   ) {
     this.bot = new Telegraf<VerificationContext>(this.configService.get('BOT_TOKEN'));
   }
@@ -71,11 +74,8 @@ export class BotService {
   }
 
   private registerHandlers(): void {
-    const privateHandler = new PrivateHandler(this.bot, this.userService);
-    const groupHandler = new GroupHandler(this.bot, this.userService, this.botInfo);
-
-    privateHandler.handle();
-    groupHandler.handle();
+    this.privateHandler.handle(this.bot);
+    this.groupHandler.handle(this.bot, this.botInfo);
   }
 
   public stop(signal: string): void {

@@ -1,10 +1,13 @@
 import { Scenes } from 'telegraf';
 
+import { Injectable } from '../utils/DI.container';
+
 import { type VerificationContext } from '../types/context.interface';
 import { type ISceneStep } from '../verification/verification.interface';
-import { type VerificationContentService } from '../verification/verification.service';
-import { type ButtonData, type VerificationView, type ViewData } from '../verification/verification.view';
+import { VerificationContentService } from '../verification/verification.service';
+import { type ButtonData, VerificationView, type ViewData } from '../verification/verification.view';
 
+@Injectable()
 export class RulesScene {
   constructor(
     private readonly contentService: VerificationContentService,

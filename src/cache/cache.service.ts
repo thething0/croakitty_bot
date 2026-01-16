@@ -1,5 +1,8 @@
-import { type DatabaseService } from '../database/database.service';
+import { Injectable } from '../utils/DI.container';
 
+import { DatabaseService } from '../database/database.service';
+
+@Injectable()
 export class CacheService {
   private readonly cache = new Map<string, unknown>();
   constructor(private readonly dbService: DatabaseService) {}

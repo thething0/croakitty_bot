@@ -6,18 +6,14 @@ import { type User } from 'telegraf/typings/core/types/typegram';
 import { BotService } from './bot.service';
 
 import { type VerificationContext } from '../types/context.interface';
-import { type UserService } from '../user/user.service';
+import { UserService } from '../user/user.service';
 
 export class GroupHandler {
-  constructor(
-    private readonly bot: Telegraf<VerificationContext>,
-    private readonly userService: UserService,
-    private readonly botInfo: ReturnType<Telegram['getMe']>,
-  ) {}
+  constructor(private readonly userService: UserService) {}
 
-  public handle(): void {
+  public handle(bot: Telegraf<VerificationContext>, botInfo: ReturnType<Telegram['getMe']>): void {
     // Обработка входа нового участника, может не работать, проверить
-    this.bot.on(message('new_chat_members'), async (ctx) => {
+    bot.on(message('new_chat_members'), async (ctx) => {
       if (ctx.chat.type !== 'group' && ctx.chat.type !== 'supergroup') {
         return;
       }
@@ -46,7 +42,7 @@ export class GroupHandler {
 
           this.userService.handleNewMemberJoined(member.id, ctx.chat.id);
 
-          const { text, extra } = this.createWelcomeMessage(this.botInfo.username, ctx.chat.id, member);
+          const { text, extra } = this.createWelcomeMessage(botInfo.username, ctx.chat.id, member);
           await ctx.reply(text, extra);
         } catch (e) {
           console.error(`[GroupHandler] Failed to process new member ${member.id} in chat ${ctx.chat.id}.`, e);
@@ -55,11 +51,11 @@ export class GroupHandler {
     });
 
     // Тестовая команда для отладки
-    this.bot.command('test', async (ctx) => {
+    bot.command('test', async (ctx) => {
       if (ctx.chat.type !== 'group' && ctx.chat.type !== 'supergroup') {
         return;
       }
-      const { text, extra } = this.createWelcomeMessage(this.botInfo.username, ctx.chat.id, ctx.from);
+      const { text, extra } = this.createWelcomeMessage(botInfo.username, ctx.chat.id, ctx.from);
       await ctx.reply(text, extra);
     });
   }

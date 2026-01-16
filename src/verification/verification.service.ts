@@ -1,16 +1,19 @@
 import * as fs from 'node:fs';
 import path from 'node:path';
 
-import { type IConfigService } from '../config/config.interface';
+import { ConfigService } from '../config/config.service';
+
+import { Injectable } from '../utils/DI.container';
 
 import { type ISceneStep } from './verification.interface';
 
+@Injectable()
 export class VerificationContentService {
   private readonly rules!: ISceneStep[];
   private readonly questions!: ISceneStep[];
   private readonly misc!: Record<string, ISceneStep>;
 
-  constructor(private readonly configService: IConfigService) {
+  constructor(private readonly configService: ConfigService) {
     const contentPath = this.configService.get('CONTENT_PATH', 'data/steps.json');
     const absolutePath = path.join(process.cwd(), contentPath);
 

@@ -1,16 +1,15 @@
 import { Markup, type Telegraf } from 'telegraf';
 
 import { type VerificationContext } from '../types/context.interface';
-import { type UserService } from '../user/user.service';
+import { UserService } from '../user/user.service';
 
 export class PrivateHandler {
   constructor(
-    private readonly bot: Telegraf<VerificationContext>,
     private readonly userService: UserService,
   ) {}
 
-  public handle(): void {
-    this.bot.start(async (ctx) => {
+  public handle(bot: Telegraf<VerificationContext>): void {
+    bot.start(async (ctx) => {
       if (ctx.chat.type !== 'private') {
         return;
       }
@@ -25,19 +24,19 @@ export class PrivateHandler {
     });
 
     // /restart для отладки
-    this.bot.command('restart', async (ctx) => {
+    bot.command('restart', async (ctx) => {
       if (ctx.chat.type !== 'private') return;
       await this.runVerification(ctx);
     });
 
     // перезапуск с клавиатуры
-    this.bot.action(/restart_verification:(-?\d+)/, async (ctx) => {
+    bot.action(/restart_verification:(-?\d+)/, async (ctx) => {
       await ctx.answerCbQuery();
       return this.runVerification(ctx, +ctx.match[1]);
     });
 
     // фикс обработки вне сцены
-    this.bot.on('callback_query', async (ctx) => {
+    bot.on('callback_query', async (ctx) => {
       console.warn(`[PrivateHandler] Caught unknown callback from user ${ctx.from.id}`);
       try {
         await ctx.answerCbQuery();

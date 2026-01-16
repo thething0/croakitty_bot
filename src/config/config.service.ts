@@ -2,6 +2,9 @@ import { config } from 'dotenv';
 
 import { type IConfigService } from './config.interface';
 
+import { Injectable } from '../utils/DI.container';
+
+@Injectable()
 export class ConfigService implements IConfigService {
   constructor() {
     config();

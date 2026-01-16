@@ -1,18 +1,21 @@
 import { Scenes } from 'telegraf';
 
-import { type IConfigService } from '../config/config.interface';
+import { ConfigService } from '../config/config.service';
 
 import { BotService } from '../bot/bot.service';
 
-import { type VerificationContext } from '../types/context.interface';
-import { type UserService, VerificationStatus } from '../user/user.service';
-import { type ISceneStep } from '../verification/verification.interface';
-import { type VerificationContentService } from '../verification/verification.service';
-import { type ButtonData, type VerificationView, type ViewData } from '../verification/verification.view';
+import { Injectable } from '../utils/DI.container';
 
+import { type VerificationContext } from '../types/context.interface';
+import { UserService, VerificationStatus } from '../user/user.service';
+import { type ISceneStep } from '../verification/verification.interface';
+import { VerificationContentService } from '../verification/verification.service';
+import { type ButtonData, VerificationView, type ViewData } from '../verification/verification.view';
+
+@Injectable()
 export class QuestionsScene {
   constructor(
-    private readonly configService: IConfigService,
+    private readonly configService: ConfigService,
     private readonly userService: UserService,
     private readonly contentService: VerificationContentService,
     private readonly view: VerificationView,

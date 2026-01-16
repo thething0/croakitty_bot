@@ -1,5 +1,9 @@
 import Database, { type Database as DB } from 'better-sqlite3';
 
+import { ConfigService } from '../config/config.service'; // <--- Добавили
+
+import { Injectable } from '../utils/DI.container';
+
 export interface UserRecord {
   id: number;
   user_id: number;
@@ -9,10 +13,12 @@ export interface UserRecord {
   last_attempt: number | null;
 }
 
+@Injectable()
 export class DatabaseService {
   public readonly db: DB;
 
-  constructor(databasePath: string) {
+  constructor(private readonly configService: ConfigService) {
+    const databasePath = this.configService.get('DB_PATH');
     this.db = new Database(databasePath);
     this.init();
   }

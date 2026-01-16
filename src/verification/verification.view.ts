@@ -1,7 +1,9 @@
 import { Markup } from 'telegraf';
 import { type InlineKeyboardMarkup } from 'telegraf/typings/core/types/typegram';
 
-import { type MediaService } from '../bot/media.service';
+import { MediaService } from '../bot/media.service';
+
+import { Injectable } from '../utils/DI.container';
 
 import { type VerificationContext } from '../types/context.interface';
 
@@ -16,6 +18,7 @@ export interface ViewData {
   buttons: ButtonData[]; // Массив рядов кнопок
 }
 
+@Injectable()
 export class VerificationView {
   constructor(private readonly mediaService: MediaService) {}
 

@@ -7,7 +7,7 @@ module.exports = {
   },
   plugins: ['@typescript-eslint', 'eslint-plugin-import-helpers', 'prettier'],
   rules: {
-    '@typescript-eslint/consistent-type-imports': ['warn', { fixStyle: 'inline-type-imports' }],
+    '@typescript-eslint/consistent-type-imports': ['off'],
     /*'@typescript-eslint/naming-convention': [
       'error',
       {
