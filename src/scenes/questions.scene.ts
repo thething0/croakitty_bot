@@ -12,6 +12,7 @@ import { UserService, VerificationStatus } from '../user/user.service';
 import { type ISceneStep } from '../verification/verification.interface';
 import { VerificationContentService } from '../verification/verification.service';
 import { type ButtonData, VerificationView, type ViewData } from '../verification/verification.view';
+import { escapeHTML } from '../utils/text.utils';
 
 @Injectable()
 export class QuestionsScene {
@@ -78,7 +79,7 @@ export class QuestionsScene {
     if (!ctx.callbackQuery || !('data' in ctx.callbackQuery)) {
       return;
     }
-    const userLog = `${ctx.from?.id } (${ctx.from?.first_name} @${ctx.from?.username || 'no_username'})`;
+    const userLog = `${ctx.from?.id} (${ctx.from?.first_name} @${ctx.from?.username || 'no_username'})`;
     try {
       const { state } = ctx.wizard;
       const steps = this.contentService.getQuestions();
@@ -154,7 +155,9 @@ export class QuestionsScene {
     if (score >= passThreshold) {
       try {
         //размут
-        this.logger.info(`User ${userLog} PASSED verification in chat ${chatId} with score ${score}/${questions.length}. Granting chat access.`);
+        this.logger.info(
+          `User ${userLog} PASSED verification in chat ${chatId} with score ${score}/${questions.length}. Granting chat access.`,
+        );
         await ctx.telegram.restrictChatMember(chatId, userId, {
           permissions: BotService.unmutePermissions,
         });
@@ -189,7 +192,6 @@ export class QuestionsScene {
 
       this.logger.warn(`User ${userLog} FAILED verification in chat ${chatId}.\n${failDetails}`);
 
-
       if (remaining > 0) {
         const failStep = this.contentService.getServiceStep('fail');
         const text = failStep.text.replace('{count}', remaining.toString()).replace('{try_noun}', this.getTryNoun(remaining));
@@ -220,8 +222,8 @@ export class QuestionsScene {
 
   private getQuestionViewData(step: ISceneStep, stepIndex: number, totalSteps: number): ViewData {
     const header = `<b>Вопрос ${stepIndex + 1}/${totalSteps}</b>\n\n`;
-    const optionsText = step.options?.map((opt, idx) => `${idx + 1}. ${opt}`).join('\n');
-    const fullText = `${header}${step.text}${optionsText ? `\n\n<blockquote>${optionsText}</blockquote>` : ''}`;
+    const optionsText = step.options?.map((opt, idx) => `${idx + 1}. ${escapeHTML(opt)}`).join('\n');
+    const fullText = `${header}${escapeHTML(step.text)}${optionsText ? `\n\n<blockquote>${optionsText}</blockquote>` : ''}`;
 
     const buttons: ButtonData[] = [];
     if (step.options?.length) {

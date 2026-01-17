@@ -9,6 +9,7 @@ import { Logger } from '../utils/logger';
 
 import { type VerificationContext } from '../types/context.interface';
 import { UserService } from '../user/user.service';
+import { escapeHTML } from '../utils/text.utils';
 
 export class GroupHandler {
   private readonly logger = new Logger('GroupHandler');
@@ -74,7 +75,7 @@ export class GroupHandler {
     const keyboard = Markup.inlineKeyboard([Markup.button.url('Тык сюда', botLink)]);
 
     const userName = user.username || user.first_name || 'Безымянный пользователь';
-    const userMention = `<a href="tg://user?id=${user.id}">${userName}</a>`;
+    const userMention = `<a href="tg://user?id=${user.id}">${escapeHTML(userName)}</a>`;
 
     const text = `Привет, ${userMention}! Это Кватёныш, бот этого чата.\nЯ здесь, чтобы сориентировать тебя в правилах чата перед твоим участием в нем.\nПожалуйста, перейди в меня по кнопке ниже.`;
 
@@ -84,9 +85,5 @@ export class GroupHandler {
     };
 
     return { text, extra };
-  }
-
-  private escapeHTML(text: string) {
-    return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 }

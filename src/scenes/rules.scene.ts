@@ -7,6 +7,7 @@ import { type VerificationContext } from '../types/context.interface';
 import { type ISceneStep } from '../verification/verification.interface';
 import { VerificationContentService } from '../verification/verification.service';
 import { type ButtonData, VerificationView, type ViewData } from '../verification/verification.view';
+import { escapeHTML } from '../utils/text.utils';
 
 @Injectable()
 export class RulesScene {
@@ -89,7 +90,7 @@ export class RulesScene {
     }
 
     return {
-      text: step.text,
+      text: escapeHTML(step.text),
       image: step.image,
       buttons: buttons,
     };
