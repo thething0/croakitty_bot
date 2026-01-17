@@ -44,7 +44,17 @@ export class RulesScene {
   private async handleAnswer(ctx: VerificationContext) {
     if (!ctx.callbackQuery || !('data' in ctx.callbackQuery)) return;
 
-    const action = ctx.callbackQuery.data;
+    const rawAction = ctx.callbackQuery.data;
+    if (!rawAction.startsWith('rules_')) {
+      this.logger.warn(`RulesScene received foreign callback: ${rawAction}. Re-rendering current view.`);
+      const rules = this.contentService.getRuleSteps();
+      const viewData = this.getRuleViewData(rules[ctx.wizard.state.currentStep], ctx.wizard.state.currentStep);
+      await this.view.show(ctx, viewData); // Перерисовываем
+      await ctx.answerCbQuery('Пожалуйста, используйте кнопки на текущем сообщении.');
+      return;
+    }
+    const action = rawAction.replace('rules_', ''); // Убираем префикс
+
     const rules = this.contentService.getRuleSteps();
     const state = ctx.wizard.state;
     try {
@@ -83,10 +93,10 @@ export class RulesScene {
     const buttons: ButtonData[] = [];
 
     const btnText = step.buttonText || 'Понятно';
-    buttons.push({ text: btnText, data: 'next' });
+    buttons.push({ text: btnText, data: 'rules_next' });
 
     if (stepIndex > 0) {
-      buttons.push({ text: '⬅️ Назад', data: 'back' });
+      buttons.push({ text: '⬅️ Назад', data: 'rules_back' });
     }
 
     return {

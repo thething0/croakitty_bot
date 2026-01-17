@@ -79,11 +79,21 @@ export class QuestionsScene {
     if (!ctx.callbackQuery || !('data' in ctx.callbackQuery)) {
       return;
     }
+
     const userLog = `${ctx.from?.id} (${ctx.from?.first_name} @${ctx.from?.username || 'no_username'})`;
     try {
       const { state } = ctx.wizard;
       const steps = this.contentService.getQuestions();
-      const answer = ctx.callbackQuery.data;
+
+      const rawAnswer = ctx.callbackQuery.data;
+      if (!rawAnswer.startsWith('q_')) {
+        this.logger.warn(`QuestionsScene received foreign callback: ${rawAnswer}. Re-rendering current view.`);
+        const qData = this.getQuestionViewData(steps[state.currentStep], state.currentStep, steps.length);
+        await this.view.show(ctx, qData); // Перерисовываем
+        await ctx.answerCbQuery('Пожалуйста, используйте кнопки на текущем сообщении.');
+        return;
+      }
+      const answer = rawAnswer.replace('q_', ''); // Убираем префикс
 
       if (!state || typeof state.currentStep === 'undefined' || !Array.isArray(state.answers)) {
         this.logger.error('Wizard state is not properly initialized');
@@ -227,12 +237,12 @@ export class QuestionsScene {
 
     const buttons: ButtonData[] = [];
     if (step.options?.length) {
-      const answerButtons = step.options.map((text, idx) => ({ text: `${idx + 1}. ${text}`, data: idx.toString() }));
+      const answerButtons = step.options.map((text, idx) => ({ text: `${idx + 1}. ${escapeHTML(text)}`, data: `q_${idx}` }));
       buttons.push(...answerButtons);
     }
 
     if (stepIndex > 0) {
-      buttons.push({ text: 'Назад', data: 'back' });
+      buttons.push({ text: 'Назад', data: 'q_back' });
     }
 
     return {
