@@ -1,10 +1,13 @@
 import { Scenes } from 'telegraf';
 
+import { ConfigService } from '../config/config.service';
+
 import { Injectable } from '../utils/DI.container';
 import { Logger } from '../utils/logger';
-import { escapeHTML } from '../utils/text.utils';
+import { escapeHTML, getIntervalText } from '../utils/text.utils';
 
 import { type VerificationContext } from '../types/context.interface';
+import { UserService, VerificationStatus } from '../user/user.service';
 import { type ISceneStep } from '../verification/verification.interface';
 import { VerificationContentService } from '../verification/verification.service';
 import { type ButtonData, VerificationView, type ViewData } from '../verification/verification.view';
@@ -15,6 +18,8 @@ export class RulesScene {
   constructor(
     private readonly contentService: VerificationContentService,
     private readonly view: VerificationView,
+    private readonly userService: UserService,
+    private readonly configService: ConfigService,
   ) {}
 
   public create(): Scenes.WizardScene<VerificationContext> {
@@ -22,6 +27,31 @@ export class RulesScene {
   }
 
   private async onEnterScene(ctx: VerificationContext) {
+    const state = ctx.wizard.state;
+    if (!state || typeof state.userId === 'undefined' || typeof state.chatId === 'undefined') {
+      this.logger.error('State is not initialized properly in RulesScene');
+      return ctx.scene.leave();
+    }
+    const { userId, chatId } = state;
+
+    const status = this.userService.getVerificationStatus(userId, chatId);
+
+    // Если попытки исчерпаны, показываем экран ожидания и выходим
+    if (status === VerificationStatus.LIMIT_REACHED) {
+      this.logger.info(
+        `User ${userId} tried to start verification for chat ${chatId} but attempts are limited. Showing 'tryLater' screen.`,
+      );
+
+      const tryLaterStep = this.contentService.getServiceStep('tryLater');
+      const intervalHours = +this.configService.get('RESET_INTERVAL_H', '168');
+      const intervalText = getIntervalText(intervalHours);
+      const text = tryLaterStep.text.replace('{interval}', intervalText);
+      const buttons = [{ text: 'Попробовать снова', data: `restart_verification:${chatId}` }];
+
+      await this.view.show(ctx, { text, image: tryLaterStep.image, buttons });
+      return ctx.scene.leave();
+    }
+
     try {
       const rules = this.contentService.getRuleSteps();
       if (rules.length === 0) {

@@ -1,4 +1,4 @@
-import { Markup } from 'telegraf';
+import { Markup, TelegramError } from 'telegraf';
 import { type InlineKeyboardMarkup } from 'telegraf/typings/core/types/typegram';
 
 import { MediaService } from '../bot/media.service';
@@ -54,8 +54,18 @@ export class VerificationView {
         await this.sendNew(ctx, sendData);
       }
     } catch (e) {
-      this.logger.warn('smartSend failed, sending new message', e);
-      await this.sendNew(ctx, sendData);
+      const isNotModifiedError =
+        e instanceof TelegramError && e.description.includes('message is not modified');
+
+      if (isNotModifiedError) {
+        this.logger.info('[VerificationView] Message was not modified, ignoring.');
+        await ctx.answerCbQuery().catch(() => {});
+      } else {
+        this.logger.warn('[VerificationView] smartSend failed, sending new message', e);
+        await this.sendNew(ctx, sendData).catch((sendErr) => {
+          this.logger.error('[VerificationView] Fallback sendNew also failed', sendErr);
+        });
+      }
     }
   }
 

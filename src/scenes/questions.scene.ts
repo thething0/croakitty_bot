@@ -6,7 +6,7 @@ import { BotService } from '../bot/bot.service';
 
 import { Injectable } from '../utils/DI.container';
 import { Logger } from '../utils/logger';
-import { escapeHTML } from '../utils/text.utils';
+import { escapeHTML, getIntervalText } from '../utils/text.utils';
 
 import { type VerificationContext } from '../types/context.interface';
 import { UserService, VerificationStatus } from '../user/user.service';
@@ -55,7 +55,7 @@ export class QuestionsScene {
           const tryLaterStep = this.contentService.getServiceStep('tryLater');
 
           const intervalHours = +this.configService.get('RESET_INTERVAL_H', '168');
-          const intervalText = this.getIntervalText(intervalHours);
+          const intervalText = getIntervalText(intervalHours);
           const text = tryLaterStep.text.replace('{interval}', intervalText);
 
           await this.view.show(ctx, {
@@ -215,7 +215,7 @@ export class QuestionsScene {
       } else {
         const tryLaterStep = this.contentService.getServiceStep('tryLater');
         const intervalHours = +this.configService.get('RESET_INTERVAL_H', '168');
-        const intervalText = this.getIntervalText(intervalHours);
+        const intervalText = getIntervalText(intervalHours);
         const text = tryLaterStep.text.replace('{interval}', intervalText);
 
         await this.view.show(ctx, {
@@ -257,13 +257,5 @@ export class QuestionsScene {
     if (count === 1) return 'попытка';
     if ([2, 3, 4].includes(count)) return 'попытки';
     return 'попыток';
-  }
-
-  private getIntervalText(hours: number): string {
-    const days = Math.round(hours / 24);
-    if (days === 1) return '1 день';
-    if (days > 1 && days < 5) return `${days} дня`;
-    if (days >= 5) return `${days} дней`;
-    return `${hours} часов`;
   }
 }
