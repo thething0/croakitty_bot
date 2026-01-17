@@ -2,12 +2,12 @@ import { Scenes } from 'telegraf';
 
 import { Injectable } from '../utils/DI.container';
 import { Logger } from '../utils/logger';
+import { escapeHTML } from '../utils/text.utils';
 
 import { type VerificationContext } from '../types/context.interface';
 import { type ISceneStep } from '../verification/verification.interface';
 import { VerificationContentService } from '../verification/verification.service';
 import { type ButtonData, VerificationView, type ViewData } from '../verification/verification.view';
-import { escapeHTML } from '../utils/text.utils';
 
 @Injectable()
 export class RulesScene {

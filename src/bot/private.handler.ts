@@ -1,10 +1,12 @@
 import { Markup, type Telegraf } from 'telegraf';
 
+import { Injectable } from '../utils/DI.container';
 import { Logger } from '../utils/logger';
 
 import { type VerificationContext } from '../types/context.interface';
 import { UserService } from '../user/user.service';
 
+@Injectable()
 export class PrivateHandler {
   private readonly logger = new Logger('PrivateHandler');
 

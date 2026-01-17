@@ -5,12 +5,14 @@ import { type User } from 'telegraf/typings/core/types/typegram';
 
 import { BotService } from './bot.service';
 
+import { Injectable } from '../utils/DI.container';
 import { Logger } from '../utils/logger';
+import { escapeHTML } from '../utils/text.utils';
 
 import { type VerificationContext } from '../types/context.interface';
 import { UserService } from '../user/user.service';
-import { escapeHTML } from '../utils/text.utils';
 
+@Injectable()
 export class GroupHandler {
   private readonly logger = new Logger('GroupHandler');
 

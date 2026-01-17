@@ -6,13 +6,13 @@ import { BotService } from '../bot/bot.service';
 
 import { Injectable } from '../utils/DI.container';
 import { Logger } from '../utils/logger';
+import { escapeHTML } from '../utils/text.utils';
 
 import { type VerificationContext } from '../types/context.interface';
 import { UserService, VerificationStatus } from '../user/user.service';
 import { type ISceneStep } from '../verification/verification.interface';
 import { VerificationContentService } from '../verification/verification.service';
 import { type ButtonData, VerificationView, type ViewData } from '../verification/verification.view';
-import { escapeHTML } from '../utils/text.utils';
 
 @Injectable()
 export class QuestionsScene {
@@ -61,7 +61,7 @@ export class QuestionsScene {
           await this.view.show(ctx, {
             text: text ?? 'Вы исчерпали все попытки. Обратитесь к администратору.',
             image: tryLaterStep.image,
-            buttons: [],
+            buttons: [{ text: 'Попробовать снова', data: `restart_verification:${chatId}` }],
           }); //тут и далее
           return ctx.scene.leave();
 
@@ -221,7 +221,7 @@ export class QuestionsScene {
         await this.view.show(ctx, {
           text,
           image: tryLaterStep.image,
-          buttons: [],
+          buttons: [{ text: 'Попробовать снова', data: `restart_verification:${chatId}` }],
         });
       }
     }
