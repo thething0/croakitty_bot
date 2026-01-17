@@ -4,12 +4,15 @@ import { type InlineKeyboardMarkup } from 'telegraf/typings/core/types/typegram'
 import { ConfigService } from '../config/config.service';
 
 import { Injectable } from '../utils/DI.container';
+import { Logger } from '../utils/logger';
 
 import { CacheService } from '../cache/cache.service';
 import { type VerificationContext } from '../types/context.interface';
 
 @Injectable()
 export class MediaService {
+  private readonly logger = new Logger('MediaService');
+
   constructor(
     private readonly cacheService: CacheService,
     private readonly configService: ConfigService,
@@ -46,7 +49,7 @@ export class MediaService {
         const newFileId = sentMessage.photo.pop()?.file_id;
         if (newFileId) {
           this.cacheService.setFileId(imageFullPath, newFileId);
-          console.log(`[Cache] Cached new file_id for ${imageFullPath}`);
+          this.logger.info(`Cached new file_id for ${imageFullPath}`);
         }
       }
     }

@@ -4,6 +4,7 @@ import path from 'node:path';
 import { ConfigService } from '../config/config.service';
 
 import { Injectable } from '../utils/DI.container';
+import { Logger } from '../utils/logger';
 
 import { type ISceneStep } from './verification.interface';
 
@@ -12,6 +13,8 @@ export class VerificationContentService {
   private readonly rules!: ISceneStep[];
   private readonly questions!: ISceneStep[];
   private readonly misc!: Record<string, ISceneStep>;
+
+  private readonly logger = new Logger('VerificationContentService');
 
   constructor(private readonly configService: ConfigService) {
     const contentPath = this.configService.get('CONTENT_PATH', 'data/steps.json');
@@ -33,9 +36,9 @@ export class VerificationContentService {
       this.rules = data.rules;
       this.questions = data.questions;
       this.misc = data.misc;
-      console.log(`[ContentService] Content loaded successfully from ${contentPath}`);
+      this.logger.info(`Content loaded successfully from ${contentPath}`);
     } catch (e) {
-      console.error(`[ContentService] Could not read or parse content file at ${absolutePath}.`, e);
+      this.logger.error(`Could not read or parse content file at ${absolutePath}.`, e);
     }
   }
 

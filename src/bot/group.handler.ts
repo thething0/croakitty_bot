@@ -5,10 +5,14 @@ import { type User } from 'telegraf/typings/core/types/typegram';
 
 import { BotService } from './bot.service';
 
+import { Logger } from '../utils/logger';
+
 import { type VerificationContext } from '../types/context.interface';
 import { UserService } from '../user/user.service';
 
 export class GroupHandler {
+  private readonly logger = new Logger('GroupHandler');
+
   constructor(private readonly userService: UserService) {}
 
   public handle(bot: Telegraf<VerificationContext>, botInfo: ReturnType<Telegram['getMe']>): void {
@@ -20,32 +24,37 @@ export class GroupHandler {
 
       for (const member of ctx.message.new_chat_members) {
         if (member.is_bot) continue;
+
+        const userLog = `${member.id} (${member.first_name} @${member.username || 'no_username'})`;
+        const chatLog = `${ctx.chat.id} (${ctx.chat.title})`;
+        this.logger.info(`New member joined: ${userLog} in chat ${chatLog}.`);
+
         try {
           //проверяем не админ ли
           const chatMember = await ctx.getChatMember(member.id);
           const isAdmin = ['creator', 'administrator'].includes(chatMember.status);
           if (isAdmin) {
-            console.log(`[GroupHandler] User ${member.id} is admin, skipping mute.`);
+            this.logger.warn(`User ${userLog} is an admin. Skipping mute.`);
             continue;
           }
 
           // проверка на реджойн
           const existingUser = this.userService.findUser(member.id, ctx.chat.id);
           if (existingUser && !existingUser?.is_muted) {
-            console.log(`[GroupHandler] User ${member.id} already verified, skipping mute.`);
+            this.logger.info(`User ${userLog} already verified (re-joined). Skipping mute.`);
             continue;
           }
 
+          this.logger.info(`Applying mute to user ${userLog} in chat ${chatLog}.`);
           await ctx.telegram.restrictChatMember(ctx.chat.id, member.id, {
             permissions: BotService.mutePermissions,
           });
-
           this.userService.handleNewMemberJoined(member.id, ctx.chat.id);
 
           const { text, extra } = this.createWelcomeMessage(botInfo.username, ctx.chat.id, member);
           await ctx.reply(text, extra);
         } catch (e) {
-          console.error(`[GroupHandler] Failed to process new member ${member.id} in chat ${ctx.chat.id}.`, e);
+          this.logger.error(`Failed to process new member ${userLog} in chat ${chatLog}.`, e);
         }
       }
     });

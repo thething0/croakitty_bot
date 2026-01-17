@@ -4,6 +4,7 @@ import { type InlineKeyboardMarkup } from 'telegraf/typings/core/types/typegram'
 import { MediaService } from '../bot/media.service';
 
 import { Injectable } from '../utils/DI.container';
+import { Logger } from '../utils/logger';
 
 import { type VerificationContext } from '../types/context.interface';
 
@@ -20,6 +21,8 @@ export interface ViewData {
 
 @Injectable()
 export class VerificationView {
+  private readonly logger = new Logger('VerificationView');
+
   constructor(private readonly mediaService: MediaService) {}
 
   private buildKeyboard(buttons: ButtonData[]): Markup.Markup<InlineKeyboardMarkup> {
@@ -51,7 +54,7 @@ export class VerificationView {
         await this.sendNew(ctx, sendData);
       }
     } catch (e) {
-      console.warn('[VerificationView] smartSend failed, sending new message', e);
+      this.logger.warn('smartSend failed, sending new message', e);
       await this.sendNew(ctx, sendData);
     }
   }

@@ -6,6 +6,7 @@ import type { ExtraRestrictChatMember } from 'telegraf/typings/telegram-types';
 import { ConfigService } from '../config/config.service';
 
 import { Injectable } from '../utils/DI.container';
+import { Logger } from '../utils/logger';
 
 import { DatabaseService } from '../database/database.service';
 import { QuestionsScene } from '../scenes/questions.scene';
@@ -19,6 +20,8 @@ import { PrivateHandler } from './private.handler';
 export class BotService {
   public readonly bot: Telegraf<VerificationContext>;
   private botInfo!: ReturnType<Telegram['getMe']>;
+
+  private readonly logger = new Logger('BotService');
 
   constructor(
     private readonly configService: ConfigService, // Класс
@@ -56,18 +59,18 @@ export class BotService {
 
     this.registerHandlers();
 
-    console.log('[BotService] Bot service configured.');
+    this.logger.info('Bot service configured.');
   }
 
   public start(): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       this.bot
         .launch(() => {
-          console.log('[BotService] Bot service initialized and bot launched.');
+          this.logger.info(`Bot @${this.botInfo.username} launched successfully.`);
           resolve();
         })
         .catch((err) => {
-          console.error('[BotService] Failed to launch bot:', err);
+          this.logger.error('Failed to launch bot:', err);
           reject(err);
         });
     });
@@ -80,7 +83,7 @@ export class BotService {
 
   public stop(signal: string): void {
     this.bot.stop(signal);
-    console.log(`[BotService] Bot stopped due to ${signal} signal.`);
+    this.logger.warn(`Bot stopped due to ${signal} signal.`);
   }
 
   private static _mutePermissions: ExtraRestrictChatMember['permissions'] = {

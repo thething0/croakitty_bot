@@ -5,6 +5,7 @@ import { ConfigService } from '../config/config.service';
 import { BotService } from '../bot/bot.service';
 
 import { Injectable } from '../utils/DI.container';
+import { Logger } from '../utils/logger';
 
 import { type VerificationContext } from '../types/context.interface';
 import { UserService, VerificationStatus } from '../user/user.service';
@@ -14,6 +15,8 @@ import { type ButtonData, VerificationView, type ViewData } from '../verificatio
 
 @Injectable()
 export class QuestionsScene {
+  private readonly logger = new Logger('QuestionsScene');
+
   constructor(
     private readonly configService: ConfigService,
     private readonly userService: UserService,
@@ -28,12 +31,14 @@ export class QuestionsScene {
   private async onEnterScene(ctx: VerificationContext) {
     const state = ctx.wizard.state;
     if (!state || typeof state.userId === 'undefined' || typeof state.chatId === 'undefined') {
-      console.error('[QuestionsScene] State is not initialized properly');
+      this.logger.error('State is not initialized properly');
       return ctx.scene.leave();
     }
     const { userId, chatId } = state;
+    const userLog = `${ctx.from?.id ?? userId} (${ctx.from?.first_name} @${ctx.from?.username || 'no_username'})`;
     try {
       const status = this.userService.getVerificationStatus(userId, chatId);
+      this.logger.info(`User ${userLog} enters questions scene for chat ${chatId}. Status: ${VerificationStatus[status]}`);
 
       switch (status) {
         case VerificationStatus.USER_NOT_FOUND:
@@ -64,7 +69,7 @@ export class QuestionsScene {
           return ctx.scene.leave();
       }
     } catch (e) {
-      console.error(`[QuestionsScene] Failed to process scene entry for user ${userId}.`, e);
+      this.logger.error(`Failed to process scene entry for user ${userLog}.`, e);
       return ctx.scene.leave();
     }
   }
@@ -73,17 +78,18 @@ export class QuestionsScene {
     if (!ctx.callbackQuery || !('data' in ctx.callbackQuery)) {
       return;
     }
+    const userLog = `${ctx.from?.id } (${ctx.from?.first_name} @${ctx.from?.username || 'no_username'})`;
     try {
       const { state } = ctx.wizard;
       const steps = this.contentService.getQuestions();
       const answer = ctx.callbackQuery.data;
 
       if (!state || typeof state.currentStep === 'undefined' || !Array.isArray(state.answers)) {
-        console.error('[QuestionsScene] Wizard state is not properly initialized');
+        this.logger.error('Wizard state is not properly initialized');
         return ctx.scene.leave();
       }
       if (state.currentStep < 0 || state.currentStep >= steps.length) {
-        console.error('[QuestionsScene] Current step is out of bounds');
+        this.logger.error('Current step is out of bounds');
         return ctx.scene.leave();
       }
 
@@ -114,13 +120,14 @@ export class QuestionsScene {
       state.currentStep++;
 
       if (state.currentStep >= steps.length) {
+        this.logger.info(`User ${userLog} finished all questions. Proceeding to finishVerification.`);
         return await this.finishVerification(ctx);
       }
 
       const qData = this.getQuestionViewData(steps[state.currentStep], state.currentStep, steps.length);
       await this.view.show(ctx, qData);
     } catch (e) {
-      console.warn(`[QuestionScene] Could not answer callback query for user ${ctx.from?.id}`, e);
+      this.logger.warn(`Could not answer callback query for user ${userLog}`, e);
       return;
     } finally {
       await ctx.answerCbQuery().catch(() => {});
@@ -129,6 +136,7 @@ export class QuestionsScene {
 
   private async finishVerification(ctx: VerificationContext) {
     const { chatId, userId, answers } = ctx.wizard.state;
+    const userLog = `${ctx.from?.id} (${ctx.from?.first_name} @${ctx.from?.username || 'no_username'})`;
     const questions = this.contentService.getQuestions();
     const passThreshold = this.contentService.getPassThreshold();
 
@@ -139,13 +147,14 @@ export class QuestionsScene {
       try {
         await ctx.deleteMessage(ctx.callbackQuery.message.message_id);
       } catch (e) {
-        console.warn(`[QuestionScene] Could not delete previous message for user ${userId}:`, e);
+        this.logger.warn(`Could not delete previous message for user ${userId}:`, e);
       }
     }
 
     if (score >= passThreshold) {
       try {
         //размут
+        this.logger.info(`User ${userLog} PASSED verification in chat ${chatId} with score ${score}/${questions.length}. Granting chat access.`);
         await ctx.telegram.restrictChatMember(chatId, userId, {
           permissions: BotService.unmutePermissions,
         });
@@ -158,7 +167,7 @@ export class QuestionsScene {
           buttons: [], // Кнопок нет
         });
       } catch (e) {
-        console.error(`[QuestionsScene] Failed to unmute user ${userId}`, e);
+        this.logger.error(`Failed to unmute user ${userId}`, e);
         const errorStep = this.contentService.getServiceStep('error');
         await this.view.show(ctx, {
           text: errorStep.text ?? 'Произошла ошибка. Свяжитесь с админом.',
@@ -172,6 +181,14 @@ export class QuestionsScene {
       const maxAttempts = +this.configService.get('MAX_ATTEMPTS', '3'); //из env
       const currentAttempts = attempts === false ? maxAttempts : attempts;
       const remaining = maxAttempts - currentAttempts;
+
+      const failDetails =
+        `- Score: ${score}/${questions.length} (Threshold: ${passThreshold})\n` +
+        `- User Answers: [${answers.join(', ')}]\n` +
+        `- Result: User has ${remaining} attempts left. ${remaining > 0 ? 'Showing fail screen.' : 'Showing tryLater screen.'}\n`;
+
+      this.logger.warn(`User ${userLog} FAILED verification in chat ${chatId}.\n${failDetails}`);
+
 
       if (remaining > 0) {
         const failStep = this.contentService.getServiceStep('fail');

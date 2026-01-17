@@ -1,6 +1,7 @@
 import { ConfigService } from '../config/config.service';
 
 import { Injectable } from '../utils/DI.container';
+import { Logger } from '../utils/logger';
 
 import { DatabaseService, type UserRecord } from '../database/database.service';
 
@@ -14,6 +15,8 @@ export enum VerificationStatus {
 @Injectable()
 export class UserService {
   private readonly MAX_ATTEMPTS: number;
+
+  private readonly logger = new Logger('UserService');
 
   constructor(
     private readonly dbService: DatabaseService,
@@ -50,13 +53,16 @@ export class UserService {
   public recordVerificationAttempt(userId: number, chatId: number): false | number {
     const user = this.dbService.findUser(userId, chatId);
     if (user) {
+      this.logger.info(`Recording attempt for user ${userId} in chat ${chatId}. New count: ${user.attempts + 1}`);
       this.dbService.updateUser(userId, chatId, { attempts: user.attempts + 1, last_attempt: Date.now() });
       return user.attempts + 1;
     }
+    this.logger.error(`Attempted to record verification attempt for non-existent user ${userId} in chat ${chatId}.`);
     return false;
   }
 
   public grantChatAccess(userId: number, chatId: number): void {
+    this.logger.info(`Granting access (is_muted = false) for user ${userId} in chat ${chatId}.`);
     this.dbService.updateUser(userId, chatId, { is_muted: false, last_attempt: Date.now() });
   }
 
@@ -73,10 +79,10 @@ export class UserService {
       const threshold = Date.now() - intervalHours * 60 * 60 * 1000;
       const changes = this.dbService.resetExpiredAttempts(threshold);
       if (changes > 0) {
-        console.log(`[UserService] Attempts reset for ${changes} users.`);
+        this.logger.info(`Attempts reset for ${changes} users.`);
       }
     } catch (e) {
-      console.error('[UserService] Error while resetting attempts:', e);
+      this.logger.error('Error while resetting attempts:', e);
     }
   }
 }

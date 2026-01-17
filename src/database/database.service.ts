@@ -3,6 +3,7 @@ import Database, { type Database as DB } from 'better-sqlite3';
 import { ConfigService } from '../config/config.service'; // <--- Добавили
 
 import { Injectable } from '../utils/DI.container';
+import { Logger } from '../utils/logger';
 
 export interface UserRecord {
   id: number;
@@ -16,6 +17,7 @@ export interface UserRecord {
 @Injectable()
 export class DatabaseService {
   public readonly db: DB;
+  private readonly logger = new Logger('DatabaseService');
 
   constructor(private readonly configService: ConfigService) {
     const databasePath = this.configService.get('DB_PATH');
@@ -39,12 +41,12 @@ export class DatabaseService {
        file_id TEXT NOT NULL
       );
     `);
-    console.log('[DatabaseService] Database initialized.');
+    this.logger.info('Database initialized.');
   }
 
   public close(): void {
     this.db.close();
-    console.log('[DatabaseService] Database connection closed.');
+    this.logger.info('Database connection closed.');
   }
 
   public findUser(userId: number, chatId: number): UserRecord {

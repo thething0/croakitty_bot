@@ -1,9 +1,13 @@
 import { Markup, type Telegraf } from 'telegraf';
 
+import { Logger } from '../utils/logger';
+
 import { type VerificationContext } from '../types/context.interface';
 import { UserService } from '../user/user.service';
 
 export class PrivateHandler {
+  private readonly logger = new Logger('PrivateHandler');
+
   constructor(
     private readonly userService: UserService,
   ) {}
@@ -13,9 +17,11 @@ export class PrivateHandler {
       if (ctx.chat.type !== 'private') {
         return;
       }
+      const userLog = `${ctx.from.id} (${ctx.from.first_name} @${ctx.from.username || 'no_username'})`;
 
       const chatId = +ctx.payload;
       if (chatId && !isNaN(+chatId)) {
+        this.logger.info(`User ${userLog} started bot with payload (chatId): ${chatId}. Entering verification.`);
         return this.enterVerification(ctx, chatId);
       }
 
@@ -26,18 +32,23 @@ export class PrivateHandler {
     // /restart для отладки
     bot.command('restart', async (ctx) => {
       if (ctx.chat.type !== 'private') return;
+      const userLog = `${ctx.from.id} (${ctx.from.first_name} @${ctx.from.username || 'no_username'})`;
+      this.logger.info(`User ${userLog} used /restart command.`);
       await this.runVerification(ctx);
     });
 
     // перезапуск с клавиатуры
     bot.action(/restart_verification:(-?\d+)/, async (ctx) => {
       await ctx.answerCbQuery();
-      return this.runVerification(ctx, +ctx.match[1]);
+      const userLog = `${ctx.from.id} (${ctx.from.first_name} @${ctx.from.username || 'no_username'})`;
+      const chatId = +ctx.match[1];
+      this.logger.info(`User ${userLog} pressed restart button for chat ${chatId}.`);
+      return this.runVerification(ctx, chatId);
     });
 
     // фикс обработки вне сцены
     bot.on('callback_query', async (ctx) => {
-      console.warn(`[PrivateHandler] Caught unknown callback from user ${ctx.from.id}`);
+      this.logger.warn(`Caught unknown callback from user ${ctx.from.id}`);
       try {
         await ctx.answerCbQuery();
         await ctx.reply(
@@ -47,7 +58,7 @@ export class PrivateHandler {
           ])
         );
       } catch (e) {
-        console.error(`[PrivateHandler] Failed to send restart message to user ${ctx.from.id}`, e);
+        this.logger.error(`Failed to send restart message to user ${ctx.from.id}`, e);
       }
     });
   }

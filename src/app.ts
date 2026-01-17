@@ -1,12 +1,15 @@
 import { BotService } from './bot/bot.service';
 
 import { Container, Injectable } from './utils/DI.container';
+import { Logger } from './utils/logger';
 
 import { DatabaseService } from './database/database.service';
 import { UserService } from './user/user.service';
 
 @Injectable()
 export class App {
+  private readonly logger = new Logger('App');
+
   constructor(
     private readonly botService: BotService,
     private readonly userService: UserService,
@@ -18,7 +21,7 @@ export class App {
 
     await this.botService.init();
 
-    console.log('[App] Checking for expired attempts on startup...');
+    this.logger.info('Checking for expired attempts on startup...');
     this.userService.checkAndResetAttempts();
     this.runScheduler();
 

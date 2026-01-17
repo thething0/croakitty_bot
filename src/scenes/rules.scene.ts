@@ -1,6 +1,7 @@
 import { Scenes } from 'telegraf';
 
 import { Injectable } from '../utils/DI.container';
+import { Logger } from '../utils/logger';
 
 import { type VerificationContext } from '../types/context.interface';
 import { type ISceneStep } from '../verification/verification.interface';
@@ -9,6 +10,7 @@ import { type ButtonData, VerificationView, type ViewData } from '../verificatio
 
 @Injectable()
 export class RulesScene {
+  private readonly logger = new Logger('RulesScene');
   constructor(
     private readonly contentService: VerificationContentService,
     private readonly view: VerificationView,
@@ -34,7 +36,7 @@ export class RulesScene {
       await this.view.show(ctx, viewData);
       return ctx.wizard.next();
     } catch (e) {
-      console.error('[RulesScene] Entry error', e);
+      this.logger.error('Entry error', e);
     }
   }
 
@@ -70,7 +72,7 @@ export class RulesScene {
         await this.view.show(ctx, viewData);
       }
     } catch (e) {
-      console.error('[RulesScene] Action error', e);
+      this.logger.error('Action error', e);
     } finally {
       await ctx.answerCbQuery().catch(() => {});
     }
