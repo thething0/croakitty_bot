@@ -233,7 +233,7 @@ export class QuestionsScene {
   private getQuestionViewData(step: ISceneStep, stepIndex: number, totalSteps: number): ViewData {
     const header = `<b>Вопрос ${stepIndex + 1}/${totalSteps}</b>\n\n`;
     const optionsText = step.options?.map((opt, idx) => `${idx + 1}. ${escapeHTML(opt)}`).join('\n');
-    const fullText = `${header}${escapeHTML(step.text)}${optionsText ? `\n\n<blockquote>${optionsText}</blockquote>` : ''}`;
+    const fullText = `${header}${step.text}${optionsText ? `\n\n<blockquote>${optionsText}</blockquote>` : ''}`;
 
     const buttons: ButtonData[] = [];
     if (step.options?.length) {

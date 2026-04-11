@@ -122,7 +122,7 @@ export class RulesScene {
   private getRuleViewData(step: ISceneStep, stepIndex: number): ViewData {
     const buttons: ButtonData[] = [];
 
-    const btnText = step.buttonText || 'Понятно';
+    const btnText = escapeHTML(step.buttonText || 'Понятно');
     buttons.push({ text: btnText, data: 'rules_next' });
 
     if (stepIndex > 0) {
@@ -130,7 +130,7 @@ export class RulesScene {
     }
 
     return {
-      text: escapeHTML(step.text),
+      text: step.text,
       image: step.image,
       buttons: buttons,
     };
