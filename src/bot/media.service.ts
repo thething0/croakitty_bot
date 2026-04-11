@@ -23,8 +23,8 @@ export class MediaService {
     imagePath: string,
     options: { caption: string; reply_markup: InlineKeyboardMarkup },
   ): Promise<void> {
-    const imageFullPath = path.join(/*process.cwd(),*/ this.configService.get('MEDIA_PATH', './media'), imagePath);
-    const fileId = this.cacheService.getFileId(imageFullPath) as string | undefined;
+    const fullPath = this.getFullPath(imagePath);
+    const fileId = this.cacheService.getFileId(fullPath) as string | undefined;
 
     if (fileId) {
       // Если file_id есть, используем его (он имеет тип string)
@@ -36,7 +36,7 @@ export class MediaService {
     } else {
       // Если file_id нет, используем объект { source: ... }
       const sentMessage = await ctx.replyWithPhoto(
-        { source: imageFullPath },
+        { source: fullPath },
         {
           caption: options.caption,
           parse_mode: 'HTML',
@@ -48,8 +48,8 @@ export class MediaService {
       if (sentMessage.photo) {
         const newFileId = sentMessage.photo.pop()?.file_id;
         if (newFileId) {
-          this.cacheService.setFileId(imageFullPath, newFileId);
-          this.logger.info(`Cached new file_id for ${imageFullPath}`);
+          this.cacheService.setFileId(fullPath, newFileId);
+          this.logger.info(`Cached new file_id for ${fullPath}`);
         }
       }
     }
@@ -60,14 +60,14 @@ export class MediaService {
     imagePath: string,
     options: { caption: string; reply_markup: InlineKeyboardMarkup },
   ): Promise<void> {
-    const imageFullPath = path.join(this.configService.get('MEDIA_PATH', './media'), imagePath);
-    const fileId = this.cacheService.getFileId(imageFullPath) as string | undefined;
+    const fullPath = this.getFullPath(imagePath);
+    const fileId = this.cacheService.getFileId(fullPath) as string | undefined;
 
     if (!fileId || !ctx.callbackQuery?.message) {
       if (ctx.callbackQuery?.message) {
         await ctx.deleteMessage(ctx.callbackQuery.message.message_id);
       }
-      await this.sendPhoto(ctx, imageFullPath, options);
+      await this.sendPhoto(ctx, imagePath, options);
       return;
     }
 
@@ -75,5 +75,9 @@ export class MediaService {
       { type: 'photo', media: fileId, caption: options.caption, parse_mode: 'HTML' },
       { reply_markup: options.reply_markup },
     );
+  }
+
+  private getFullPath(relativePath: string): string {
+    return path.join(this.configService.get('MEDIA_PATH', './media'), relativePath);
   }
 }
