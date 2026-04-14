@@ -25,11 +25,20 @@ export class GroupHandler {
         return;
       }
 
+      const chatLog = `${ctx.chat.id} (${ctx.chat.title})`;
+      const botMember = await ctx.getChatMember(ctx.botInfo.id);
+      const canRestrict = botMember.status === 'administrator' && botMember.can_restrict_members;
+      if (!canRestrict) {
+        this.logger.error(`Bot lacks permission to restrict members in chat ${chatLog}`);
+        // Опционально: уведомить администраторов чата
+        return; // или break, если для всех одинаково
+      }
+
       for (const member of ctx.message.new_chat_members) {
         if (member.is_bot) continue;
 
         const userLog = `${member.id} (${member.first_name} @${member.username || 'no_username'})`;
-        const chatLog = `${ctx.chat.id} (${ctx.chat.title})`;
+
         this.logger.info(`New member joined: ${userLog} in chat ${chatLog}.`);
 
         try {
