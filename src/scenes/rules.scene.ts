@@ -15,6 +15,8 @@ import { type ButtonData, VerificationView, type ViewData } from '../verificatio
 @Injectable()
 export class RulesScene {
   private readonly logger = new Logger('RulesScene');
+  private chatTitleCache = new Map<number, string>();
+
   constructor(
     private readonly contentService: VerificationContentService,
     private readonly view: VerificationView,
@@ -24,6 +26,17 @@ export class RulesScene {
 
   public create(): Scenes.WizardScene<VerificationContext> {
     return new Scenes.WizardScene<VerificationContext>('rules', this.onEnterScene.bind(this), this.handleAnswer.bind(this));
+  }
+
+  private async getChatTitle(chatId: number, ctx: VerificationContext) {
+    if (!this.chatTitleCache.has(chatId)) {
+      try {
+        const chat = await ctx.telegram.getChat(chatId);
+        if ('title' in chat) this.chatTitleCache.set(chatId, chat.title);
+      } catch {}
+    }
+    const chatTitle = this.chatTitleCache.get(chatId) || `ID ${chatId}`;
+    return chatTitle;
   }
 
   private async onEnterScene(ctx: VerificationContext) {
@@ -38,8 +51,10 @@ export class RulesScene {
 
     // Если попытки исчерпаны, показываем экран ожидания и выходим
     if (status === VerificationStatus.LIMIT_REACHED) {
+      const chatTitle = await this.getChatTitle(chatId, ctx);
+
       this.logger.info(
-        `User ${userId} tried to start verification for chat ${chatId} but attempts are limited. Showing 'tryLater' screen.`,
+        `User ${userId} tried to start verification for chat ${chatTitle} but attempts are limited. Showing 'tryLater' screen.`,
       );
 
       const tryLaterStep = this.contentService.getServiceStep('tryLater');

@@ -17,6 +17,7 @@ import { type ButtonData, VerificationView, type ViewData } from '../verificatio
 @Injectable()
 export class QuestionsScene {
   private readonly logger = new Logger('QuestionsScene');
+  private chatTitleCache = new Map<number, string>();
 
   constructor(
     private readonly configService: ConfigService,
@@ -58,10 +59,12 @@ export class QuestionsScene {
           const intervalText = getIntervalText(intervalHours);
           const text = tryLaterStep.text.replace('{interval}', intervalText);
 
+          const chatTitle = await this.getChatTitle(chatId, ctx);
+
           await this.view.show(ctx, {
             text: text ?? 'Вы исчерпали все попытки. Обратитесь к администратору.',
             image: tryLaterStep.image,
-            buttons: [{ text: 'Попробовать снова', data: `restart_verification:${chatId}` }],
+            buttons: [{ text: 'Попробовать снова', data: `restart_verification:${chatTitle}` }],
           }); //тут и далее
           return ctx.scene.leave();
 
@@ -73,6 +76,18 @@ export class QuestionsScene {
       this.logger.error(`Failed to process scene entry for user ${userLog}.`, e);
       return ctx.scene.leave();
     }
+  }
+
+  private async getChatTitle(chatId: number, ctx: VerificationContext) {
+    if (!this.chatTitleCache.has(chatId)) {
+      try {
+        const chat = await ctx.telegram.getChat(chatId);
+        if ('title' in chat) this.chatTitleCache.set(chatId, chat.title);
+      } catch {
+      }
+    }
+    const chatTitle = this.chatTitleCache.get(chatId) || `ID ${chatId}`;
+    return chatTitle;
   }
 
   private async handleAnswer(ctx: VerificationContext) {
@@ -195,12 +210,22 @@ export class QuestionsScene {
       const currentAttempts = attempts === false ? maxAttempts : attempts;
       const remaining = maxAttempts - currentAttempts;
 
+      const answersWithMarks = answers
+        .map((ans, idx) => {
+          const q = questions[idx];
+          const isCorrect = q?.correctAnswers?.includes(ans) ?? false;
+          return `${ans + 1}${isCorrect ? '✅' : '❌'}`;
+        })
+        .join(', ');
+
+      const chatTitle = await this.getChatTitle(chatId, ctx);
+
       const failDetails =
         `- Score: ${score}/${questions.length} (Threshold: ${passThreshold})\n` +
-        `- User Answers: [${answers.join(', ')}]\n` +
+        `- User Answers: [${answersWithMarks}]\n` +
         `- Result: User has ${remaining} attempts left. ${remaining > 0 ? 'Showing fail screen.' : 'Showing tryLater screen.'}\n`;
 
-      this.logger.warn(`User ${userLog} FAILED verification in chat ${chatId}.\n${failDetails}`);
+      this.logger.warn(`User ${userLog} FAILED verification in chat ${chatTitle}.\n${failDetails}`);
 
       if (remaining > 0) {
         const failStep = this.contentService.getServiceStep('fail');
