@@ -72,13 +72,13 @@ export class GroupHandler {
     });
 
     // Тестовая команда для отладки
-    bot.command('test', async (ctx) => {
+    /*bot.command('test', async (ctx) => {
       if (ctx.chat.type !== 'group' && ctx.chat.type !== 'supergroup') {
         return;
       }
       const { text, extra } = this.createWelcomeMessage(botInfo.username, ctx.chat.id, ctx.from);
       await ctx.reply(text, extra);
-    });
+    });*/
   }
 
   private createWelcomeMessage(botUsername: string, chatId: number, user: User) {
